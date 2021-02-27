@@ -1,0 +1,27 @@
+.warning_mesagge{
+    padding: 10px;
+    line-height: 35px;
+}
+
+.icono_enlace{
+	padding-top:7px; 
+	margin-right:6px;
+}
+.panel-group a{
+	display:inline-block;
+	width:100%;
+	text-decoration:none;
+}
+.panel-group a:hover{
+	text-decoration:none;
+}
+.panel-collapse a{
+	padding-left:15px;
+}
+.navbar-color {
+	background-color:#DE4D4D !important;
+}
+.navbar a{
+	color: white !important;
+}
+
