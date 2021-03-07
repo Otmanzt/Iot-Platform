@@ -1,13 +1,29 @@
+<<<<<<< HEAD
+#e2e encryption
+
+=======
+>>>>>>> 1d98aa7edb22776e3cf4d31c74ea1ba3824a7ec1
 import random
 import time
 
 import secrets
 import scrypt
 
+<<<<<<< HEAD
+import base64
+
+import os
+=======
+>>>>>>> 1d98aa7edb22776e3cf4d31c74ea1ba3824a7ec1
 import os.path
 
 from paho.mqtt import client as mqtt_client
 from cryptography.fernet import Fernet
+<<<<<<< HEAD
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives import hashes
+=======
+>>>>>>> 1d98aa7edb22776e3cf4d31c74ea1ba3824a7ec1
 
 broker = 'mqttgroupthree.cloud.shiftr.io'
 port = 1883
@@ -22,15 +38,22 @@ def generate_key():
 def load_key():
     return open("secret.key", "rb").read()
 
+<<<<<<< HEAD
+def encrypt_message(message, key):
+
+=======
 def encrypt_message(message):
 
     key = load_key()
+>>>>>>> 1d98aa7edb22776e3cf4d31c74ea1ba3824a7ec1
     encoded_message = message.encode()
     f = Fernet(key)
     encrypted_message = f.encrypt(encoded_message)
 
     return encrypted_message
 
+<<<<<<< HEAD
+=======
 def decrypt_message(encrypted_message):
 
     key = load_key()
@@ -39,6 +62,7 @@ def decrypt_message(encrypted_message):
 
     return decrypted_message.decode()
 
+>>>>>>> 1d98aa7edb22776e3cf4d31c74ea1ba3824a7ec1
 def connect_mqtt(client_id):
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
@@ -52,12 +76,20 @@ def connect_mqtt(client_id):
     client.connect(broker, port)
     return client
 
+<<<<<<< HEAD
+def publish(client, msg, topic, key):
+=======
 def publish(client, msg, topic):
+>>>>>>> 1d98aa7edb22776e3cf4d31c74ea1ba3824a7ec1
 
     while True:
         time.sleep(1)
 
+<<<<<<< HEAD
+        cif_msg = encrypt_message(msg, key)
+=======
         cif_msg = encrypt_message(msg)
+>>>>>>> 1d98aa7edb22776e3cf4d31c74ea1ba3824a7ec1
         result = client.publish(topic, cif_msg)
 
         status = result[0]
@@ -67,6 +99,39 @@ def publish(client, msg, topic):
             print(f"Failed to send message to topic {topic}")
             
 
+<<<<<<< HEAD
+def run():
+
+    print("Please write the platform public key, the value of p and the value of alpha.")
+    platformPublicKey = input()
+    deviceP = input()
+    deviceAlpha = input()
+    
+    deviceID = random.randint(0, 1000)
+    
+    deviceSecretKey = random.randint(0, 1000)   
+    devicePartialKey = (int(deviceAlpha)**int(deviceSecretKey))%int(deviceP)
+    
+    print("The ID client is: "+str(deviceID)+" and the public key is "+str(devicePartialKey)) 
+    input("Press Enter to continue...")
+    
+    key = (int(platformPublicKey)**int(deviceSecretKey))%int(deviceP)
+    key = str(key)
+    
+    salt = os.urandom(16)
+    print(salt)
+    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=str.encode("0"), iterations=100000)
+    key = base64.urlsafe_b64encode(kdf.derive(key))
+    
+    client_id = f'client-{deviceID}'
+
+    msg = 'Test'
+    topic = "/topic"+str(deviceID)
+
+    client = connect_mqtt(client_id)
+    client.loop_start()
+    publish(client, msg, topic, key)
+=======
 def subscribe(client: mqtt_client, topic):
     def on_message(client, userdata, msg):
         print(f"Received '{decrypt_message(msg.payload)}' from '{msg.topic}' topic")
@@ -126,6 +191,7 @@ def run():
         client = connect_mqtt(client_id)
         client.loop_start()
         publish(client, msg, topic)
+>>>>>>> 1d98aa7edb22776e3cf4d31c74ea1ba3824a7ec1
 
 if __name__ == '__main__':
     run()
