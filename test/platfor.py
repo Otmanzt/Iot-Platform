@@ -1,32 +1,33 @@
-<<<<<<< HEAD
-#e2e encryption
-
-=======
->>>>>>> 1d98aa7edb22776e3cf4d31c74ea1ba3824a7ec1
 import random
 import time
 
 import secrets
 import scrypt
 
-<<<<<<< HEAD
-import base64
-
-=======
->>>>>>> 1d98aa7edb22776e3cf4d31c74ea1ba3824a7ec1
 import os.path
 
 from paho.mqtt import client as mqtt_client
 from cryptography.fernet import Fernet
+
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import dh
+from cryptography.hazmat.primitives.serialization import ParameterFormat
+from cryptography.hazmat.primitives.serialization import Encoding
+from cryptography.hazmat.primitives.asymmetric.dh import DHParameterNumbers
+from cryptography.hazmat.primitives.serialization import load_pem_parameters
+
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+
+import base64
 
 broker = 'mqttgroupthree.cloud.shiftr.io'
 port = 1883
 username = 'mqttgroupthree'
 password = 'AWjxTOFOIULLmgF9'
 
-<<<<<<< HEAD
 deviceList = {}
-=======
+
 def generate_key():
     key = Fernet.generate_key()
     with open("secret.key", "wb") as key_file:
@@ -43,7 +44,6 @@ def encrypt_message(message):
     encrypted_message = f.encrypt(encoded_message)
 
     return encrypted_message
->>>>>>> 1d98aa7edb22776e3cf4d31c74ea1ba3824a7ec1
 
 def decrypt_message(encrypted_message):
 
@@ -66,69 +66,7 @@ def connect_mqtt(client_id):
     client.connect(broker, port)
     return client
 
-<<<<<<< HEAD
-def subscribe(client: mqtt_client, topic):
-    def on_message(client, userdata, msg):
-    
-        deviceID = msg.topic[5:]
-        key = deviceList.get(deviceID)
-        msg_decrypt = decrypt_message(msg.payload, key)
-        print(f"Received '{msg_decrypt}' from '{msg.topic}' topic")
-        
-        
-    client.subscribe(topic)
-    client.on_message = on_message
             
-def run():
-
-    task = -1
-    topicOption = -1
-
-    client_id = f'client-platform'
-
-    while task != "0" and task != "1":
-        print("What do you want to do?")
-        print("0 - Select topics to listen.")
-        print("1 - List devices. (NOT  IMPLEMENTED YET)")
-        print("2 - Register new device.")
-        task = input()
-
-        if task == "0":
-
-            print("Please write the name of topic or 0 if you want to listen all existent topics.")
-            topicOption = input()
-
-            if topicOption == "0":
-                client = connect_mqtt(client_id)
-                subscribe(client, "#")
-                client.loop_forever()
-            else:
-                client = connect_mqtt(client_id)
-                subscribe(client, "/"+topicOption)
-                client.loop_forever()
-                
-        if task == "2":
-
-            platformP = random.randint(0, 1000)
-            platformAlpha = random.randint(0, 1000)
-            platformSecretKey = random.randint(0, 1000)
-            
-            platformPartialKey = (int(platformAlpha)**int(platformSecretKey))%int(platformP)
-            
-            print("The platform public key is "+str(platformPartialKey)+" and p = "+str(platformP)+" and alpha = "+str(platformAlpha))
-            
-            print("Please write the device ID you want to register.")
-            deviceID = input()
-            
-            print("Write the device public key.")
-            devicePublicKey = input()
-
-            key = (int(devicePublicKey)**int(platformSecretKey))%int(platformP)
-            key = base64.urlsafe_b64decode(key*109034850923845)
-            print(key)
-            
-            deviceList[deviceID] = key
-=======
 def publish(client, msg, topic):
 
     while True:
@@ -153,7 +91,6 @@ def subscribe(client: mqtt_client, topic):
 
 def run():
 
-
     option = -1
     task = -1
     topicOption = -1
@@ -167,44 +104,75 @@ def run():
         print("Generating a new Fender key...")
         generate_key()
 
-    while option != "0" and option != "1":
-        print("Are you an IoT platform (Enter 0) or IoT Device (Enter 1)?")
-        option = input()
+    randomNumber = random.randint(0, 1000)
+    client_id = f'client-platform-{randomNumber}'
 
-    if option == "0":
-        randomNumber = random.randint(0, 1000)
-        client_id = f'client-platform-{randomNumber}'
+    while task != "0" and task != "1":
+        print("What do you want to do?")
+        print("0 - Select topics to listen.")
+        print("1 - List devices. (NOT  IMPLEMENTED YET)")
+        print("2 - Register new device.")
+        task = input()
 
-        while task != "0" and task != "1":
-            print("What do you want to do?")
-            print("0 - Select topics to listen.")
-            print("1 - List devices. (NOT  IMPLEMENTED YET)")
-            task = input()
+        if task == "0":
 
-            if task == "0":
+            print("Please write the name of topic or 0 if you want to listen all existent topics.")
+            topicOption = input()
 
-                print("Please write the name of topic or 0 if you want to listen all existent topics.")
-                topicOption = input()
+            if topicOption == "0":
+                client = connect_mqtt(client_id)
+                subscribe(client, "#")
+                client.loop_forever()
+            else:
+                client = connect_mqtt(client_id)
+                subscribe(client, "/"+topicOption)
+                client.loop_forever()
+                
+        if task == "2":
+    
+            parameters = dh.generate_parameters(generator=2, key_size=512,backend=default_backend())
+    
+            #Generate private keys.
+            a_private_key = parameters.generate_private_key()
+            a_public_key = a_private_key.public_key()
 
-                if topicOption == "0":
-                    client = connect_mqtt(client_id)
-                    subscribe(client, "#")
-                    client.loop_forever()
-                else:
-                    client = connect_mqtt(client_id)
-                    subscribe(client, "/"+topicOption)
-                    client.loop_forever()
+            print("Esta es mi clave privada: %d"%a_private_key.private_numbers().x)
+            print("Esta es mi clave pública: %d"%a_public_key.public_numbers().y)
 
-    if option == "1":
-        randomNumber = random.randint(0, 1000)
-        client_id = f'client-{randomNumber}'
-        msg = 'Test'
-        topic = "/topic"+str(randomNumber)
+            params_pem = parameters.parameter_bytes(Encoding.PEM, ParameterFormat.PKCS3)
+            params_b = load_pem_parameters(params_pem, backend=default_backend())
 
-        client = connect_mqtt(client_id)
-        client.loop_start()
-        publish(client, msg, topic)
->>>>>>> 1d98aa7edb22776e3cf4d31c74ea1ba3824a7ec1
+            b_private_key = params_b.generate_private_key()
+            b_public_key = b_private_key.public_key()
+
+            print("Esta es tu clave privada: %d"%b_private_key.private_numbers().x)
+            print("Esta es tu clave pública: %d"%b_public_key.public_numbers().y)
+
+            a_shared_key = a_private_key.exchange(b_public_key)
+            b_shared_key = b_private_key.exchange(a_public_key)
+
+            print("a_shared_key: " + str(a_shared_key))
+            print("b_shared_key: " + str(b_shared_key))
+           
+            derived_key = HKDF(
+                algorithm=hashes.SHA256(),
+                length=32,
+                salt=None,
+                info=b'handshake data',
+            ).derive(a_shared_key)
+           
+            key = base64.urlsafe_b64encode(derived_key)
+           
+            message="Test"
+            encoded_message = message.encode()
+            f = Fernet(key)
+            encrypted_message = f.encrypt(encoded_message)
+            
+            decrypted_message = f.decrypt(encrypted_message)
+
+            print(decrypted_message.decode())
+            
+            #deviceList[1] = key
 
 if __name__ == '__main__':
     run()
