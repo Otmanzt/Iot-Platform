@@ -8,6 +8,20 @@ from cryptography.hazmat.primitives.serialization import load_pem_parameters
 from paquetes.mqtt import *
 from paquetes.keyUtils import *
 
+
+def subscribe(client: mqtt_client, topic, key=None):
+    def on_message(client, userdata, msg):
+
+        if key is not None:
+            print(f"Received '{KeyUtils.decrypt_message(msg.payload, key)}' from '{msg.topic}' topic")
+        else:
+            print(f"Received '{msg.payload.decode()}' from '{msg.topic}' topic")
+
+        client.msg_payload.append(msg.payload.decode())
+
+    client.subscribe(topic)
+    client.on_message = on_message
+
 def run():
 
     option = -1
@@ -26,16 +40,28 @@ def run():
     '''
     randomNumber = random.randint(0, 1000)
     client_id = f'client-{randomNumber}'
-    topicNew = "/topic/newConnect/ID" + str(randomNumber)
-    topicRequest = "/topic/request"
+    topic_new_params = "/topic/newConnect/"+client_id+"/params"
+    topic_new_pb = "/topic/newConnect/" + client_id + "/public"
+    topic_request = "/topic/request"
 
     client = Mqtt.connect_mqtt(client_id)
+    Mqtt.publish(client, client_id, topic_request)  # Topic para enviar la peticion de conexion nueva con la plataform
+    client.msg_payload = []
+
     client.loop_start()
-    Mqtt.subscribe(client, topicNew)  # Topic para esperar la respuesta con los parametros de la plataforma
-    Mqtt.publish(client, client_id, topicRequest)  # Topic para enviar la peticion de conexion nueva con la plataform
+    Mqtt.subscribe(client, topic_new_params)  # Topic para esperar la respuesta con los parametros de la plataforma
+    Mqtt.subscribe(client, topic_new_pb)  # Topic para esperar la respuesta con los parametros de la plataforma
     time.sleep(10)
     client.loop_stop()
 
+    params_b = load_pem_parameters(str(client.msg_payload[0]).encode(), backend=default_backend())
+    b_private_key = params_b.generate_private_key()
+    b_public_key = b_private_key.public_key()
+    print(client.msg_payload[1])
+    print(type(client.msg_payload[1]))
+    b_shared_key = b_private_key.exchange(client.msg_payload[1].encode())
+    print(b_shared_key)
+    '''
     ##################################################################################################
     parameters = dh.generate_parameters(generator=2, key_size=512, backend=default_backend())
     params_pem = parameters.parameter_bytes(Encoding.PEM, ParameterFormat.PKCS3)
@@ -55,7 +81,7 @@ def run():
 
     print("key: " + str(key))
     ##################################################################################################
-
+    '''
 
 if __name__ == '__main__':
     run()

@@ -38,11 +38,13 @@ class Mqtt:
     @staticmethod
     def subscribe(client: mqtt_client, topic, key=None):
         def on_message(client, userdata, msg):
+
             if key is not None:
                 print(f"Received '{KeyUtils.decrypt_message(msg.payload,key)}' from '{msg.topic}' topic")
             else:
-                print(f"Received '{msg.payload}' from '{msg.topic}' topic")
-            return msg.payload
+                print(f"Received '{msg.payload.decode()}' from '{msg.topic}' topic")
+
+            client.msg_payload.append(msg.payload.decode())
 
         client.subscribe(topic)
         client.on_message = on_message

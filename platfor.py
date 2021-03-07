@@ -12,6 +12,17 @@ deviceList = {}
 
 
 def run():
+    parameters = dh.generate_parameters(generator=2, key_size=512, backend=default_backend())
+
+    # Generate private keys.
+    a_private_key = parameters.generate_private_key()
+    a_public_key = a_private_key.public_key()
+
+    print("Esta es mi clave privada: %d" % a_private_key.private_numbers().x)
+    print("Esta es mi clave pública: %d" % a_public_key.public_numbers().y)
+
+    params_pem = parameters.parameter_bytes(Encoding.PEM, ParameterFormat.PKCS3)
+
     randomNumber = random.randint(0, 1000)
     client_id = f'client-platform-{randomNumber}'
 
@@ -48,11 +59,20 @@ def run():
                 client.loop_forever()
                 
         if task == "2":
-            topicNew = "/topic/newConnect/ID" + str(randomNumber)
+            topic_request = "/topic/request"
+            client.msg_payload = []
             client.loop_start()
-            Mqtt.subscribe(client, topicNew)  # Topic para esperar la respuesta con los parametros de la plataforma
+            Mqtt.subscribe(client, topic_request)  # Topic para esperar la respuesta con los parametros de la plataforma
             time.sleep(10)
             client.loop_stop()
+
+            if client.msg_payload:
+                topic_new_params = "/topic/newConnect/" + str(client.msg_payload[0]) + "/params"
+                topic_new_pb = "/topic/newConnect/" + str(client.msg_payload[0]) + "/public"
+                Mqtt.publish(client, params_pem, topic_new_params)
+                Mqtt.publish(client, params_pem, topic_new_pb)
+            else:
+                print("Timeout 10 secs")
 
             '''
             parameters = dh.generate_parameters(generator=2, key_size=512,backend=default_backend())

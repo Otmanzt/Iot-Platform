@@ -26,7 +26,7 @@ class KeyUtils:
         return encrypted_message
 
     @staticmethod
-    def decrypt_message(encrypted_message,key):
+    def decrypt_message(encrypted_message, key):
 
         #key = load_key()
         f = Fernet(key)
