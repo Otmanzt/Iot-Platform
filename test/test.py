@@ -78,6 +78,9 @@ def subscribe(client: mqtt_client, topic):
 
 def run():
 
+    p = 10
+    alfa = 20
+
     option = -1
     task = -1
     topicOption = -1
@@ -97,6 +100,7 @@ def run():
 
     if option == "0":
         client_id = f'client-platform'
+        a = 
 
         while task != "0" and task != "1":
             print("What do you want to do?")
@@ -121,6 +125,7 @@ def run():
     if option == "1":
         randomNumber = random.randint(0, 1000)
         client_id = f'client-{randomNumber}'
+        b = 
 
         msg = 'Test'
         topic = "/topic"+str(randomNumber)
