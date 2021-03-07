@@ -1,5 +1,3 @@
-#e2e encryption
-
 import random
 import time
 
@@ -97,7 +95,8 @@ def run():
         option = input()
 
     if option == "0":
-        client_id = f'client-platform'
+        randomNumber = random.randint(0, 1000)
+        client_id = f'client-platform-{randomNumber}'
 
         while task != "0" and task != "1":
             print("What do you want to do?")

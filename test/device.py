@@ -1,5 +1,3 @@
-#e2e encryption
-
 import random
 import time
 
