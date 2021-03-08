@@ -1,17 +1,14 @@
-import random
-import os.path
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import dh
 from cryptography.hazmat.primitives.serialization import ParameterFormat
 from cryptography.hazmat.primitives.serialization import Encoding
-from cryptography.hazmat.primitives.serialization import load_pem_parameters
 from paquetes.mqtt import *
 from paquetes.keyUtils import *
 
 deviceList = {}
 
 def subscribe(client: mqtt_client, topic, key=None):
-    def on_message(client, userdata, msg):       
+    def on_message(client, userdata, msg):
         if key is not None:
             print(f"Received '{KeyUtils.decrypt_message(msg.payload, key)}' from '{msg.topic}' topic")
         else:
@@ -23,6 +20,9 @@ def subscribe(client: mqtt_client, topic, key=None):
     client.on_message = on_message
 
 def run():
+    mensaje_recibido = False
+    time_out = 20
+    time_init = 0
     parameters = dh.generate_parameters(generator=2, key_size=512, backend=default_backend())
 
     # Generate private keys.
@@ -38,7 +38,7 @@ def run():
     client_id = f'client-platform'
 
     client = Mqtt.connect_mqtt(client_id)
-    
+
     task = -1
     changekey = -1
     '''
@@ -69,15 +69,22 @@ def run():
             else:
                 subscribe(client, "/"+topicOption)
                 client.loop_forever()
-                
+
         if task == "2":
             topic_request = "/topic/request"
             client.msg_payload = []
+            client.b_public_key = 0
             client.loop_start()
+
             Mqtt.subscribe(client, topic_request)  # Topic para esperar la respuesta con los parametros de la plataforma
-            time.sleep(10)
+            print("Esperando Cliente nuevo")
+            while not mensaje_recibido and time_init < time_out:
+                if client.msg_payload:
+                    mensaje_recibido = True
+                time.sleep(1)
+                time_init += 1
             client.loop_stop()
-            
+
             if client.msg_payload:
                 client.client_id = str(client.msg_payload[0])
                 topic_new_params = "/topic/newConnect/" + client.client_id + "/params"
@@ -89,15 +96,22 @@ def run():
                 # Clave publica de la plataforma
                 Mqtt.publish(client, a_public_key.public_numbers().y, topic_new_pb_plat)
                 # Se queda escuchando la clave publica del dispositivo
+                mensaje_recibido = False
+                time_init = 0
                 client.loop_start()
                 subscribe(client, topic_new_pb_device)
-                time.sleep(10)
+                print("Esperando clave pública del dispositivo...")
+                while not mensaje_recibido and time_init < time_out:
+                    if client.b_public_key:
+                        mensaje_recibido = True
+                    time.sleep(1)
+                    time_init += 1
                 client.loop_stop()
-                
+
                 peer_public_numbers = dh.DHPublicNumbers(client.b_public_key, parameters.parameter_numbers())
                 b_public_key = peer_public_numbers.public_key(default_backend())
                 a_shared_key = a_private_key.exchange(b_public_key)
-                
+
                 key = KeyUtils.convert_key(a_shared_key)
                 '''
                 client.loop_start()
@@ -106,8 +120,6 @@ def run():
                 client.loop_stop()
                 '''
                 deviceList[client.client_id] = key
-            else:
-                print("Timeout 10 secs")
 
             '''
             parameters = dh.generate_parameters(generator=2, key_size=512,backend=default_backend())

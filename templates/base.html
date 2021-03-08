@@ -9,22 +9,18 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <meta name="google-signin-client_id" content="724763817794-ggc2ttdiijonm72qd27s1fjkk3a0sglm.apps.googleusercontent.com">
-    <title>TeleMenú</title>
+    <title>App E2E</title>
 
 
 	<link rel="icon"  href="{{ url_for('static', filename='icons/favicon.png') }}" type="image/png" sizes="32x32">
     <!-- Bootstrap Core CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}" >
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.5.css') }}" >
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" >
     <link rel="stylesheet" href="{{ url_for('static', filename='fontawesome/css/all.css') }}" >
     
 
     <!-- Custom CSS -->
     <style>
-        body {
-            padding-top: 70px;
-            /* Required padding for .navbar-fixed-top. Remove if using .navbar-static-top. Change if height of navigation changes. */
-        }
     </style>
 
 
@@ -32,41 +28,26 @@
 
 <body>
 
-<!-- Navigation -->
-<nav class="navbar navbar-inverse navbar-fixed-top navbar-color" role="navigation">
-    <div class="container">
-        <!-- Brand and toggle get grouped for better mobile display -->
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-        </div>
-        <!-- Collect the nav links, forms, and other content for toggling -->
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav">
-                <li>
-                    <a style="color:white" href="/"> <img src="{{ url_for('static', filename='icons/iot-icon.png') }}" style="margin-right:6px;width:32px;"> <b>App IoT</b></a>
-                </li>
-                <li>
-                    <a style="padding-top:20px" href="/"><i class="fas fa-home"></i> Inicio</a>
-                </li>
-
-
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-            </ul>
-        </div>
-        <!-- /.navbar-collapse -->
+<nav class="navbar navbar-expand-lg navbar-light navbar-color">
+  <div class="offset-lg-3 container-fluid">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+            <a class="nav-link active" style="color:white;" href="/"> <img src="{{ url_for('static', filename='icons/iot-icon.png') }}" style="margin-right:6px;width:32px;"> <b>App IoT</b></a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/"><i class="fas fa-home"></i> Inicio</a>
+        </li>
+      </ul>
     </div>
-    <!-- /.container -->
+  </div>
 </nav>
 
 <!-- Page Content -->
-<div class="container">
+<div class="container" style="margin-top:20px">
 
     <div class="row">
         {% block content %}
@@ -78,7 +59,7 @@
 
 <!-- jQuery Version 1.11.1 -->
 <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
-<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.5.js') }}"></script>
 <script type="text/javascript">
 
 	$(document).ready(function(){
