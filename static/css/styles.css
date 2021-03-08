@@ -23,5 +23,7 @@
 }
 .navbar a{
 	color: white !important;
+	padding-top: 11px !important;
+	margin-left: 15px !important;
 }
 

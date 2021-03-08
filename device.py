@@ -25,6 +25,10 @@ def subscribe(client: mqtt_client, topic, key=None):
 
 def run():
 
+    mensaje_recibido = False
+    time_out = 20
+    time_init = 0
+
     option = -1
     task = -1
     topicOption = -1
@@ -39,9 +43,6 @@ def run():
     
     # Conexion con MQTT
     client = Mqtt.connect_mqtt(client_id)
-    client.msg_payload = []
-    client.params_b = b''
-    client.a_public_key = b''
 
     Mqtt.publish(client, client_id, topic_request)  # Topic para enviar la peticion de conexion nueva con la plataform
 
@@ -50,7 +51,12 @@ def run():
     subscribe(client, topic_new_pb_plat)  # Topic para esperar la respuesta con los parametros de la plataforma
     print("Connecting with platform... Please wait")
     
-    time.sleep(10)
+    while not mensaje_recibido and time_init < time_out:
+        if hasattr(client, 'a_public_key') and hasattr(client, 'params_b'):
+            mensaje_recibido = True
+        time.sleep(1)
+        time_init += 1
+
     client.loop_stop()
     
     params_b = load_pem_parameters(str(client.params_b).encode(), backend=default_backend())
@@ -63,8 +69,6 @@ def run():
     peer_public_numbers = dh.DHPublicNumbers(client.a_public_key, params_b.parameter_numbers())
     a_public_key = peer_public_numbers.public_key(default_backend())
     b_shared_key = b_private_key.exchange(a_public_key)
-
-    time.sleep(20)
 
     message = "Test"
     key = KeyUtils.convert_key(b_shared_key)    

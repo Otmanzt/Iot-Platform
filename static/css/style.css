@@ -24,8 +24,10 @@
 .navbar{
     border: 0px !important;
 }
-.navbar a{
-	color: white !important;
+
+.navbar a {
+    color: white !important;
+	margin-left: 15px !important;
 }
 .topnav {
   background-color: #333;
