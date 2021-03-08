@@ -31,20 +31,10 @@ class Mqtt:
 
         status = result[0]
         if status == 0:
-            print(f"Send encrypted message '{msg}' to topic '{topic}'")
+            if "message" in topic:
+                if len(msg) >= 20:
+                    print(f"Send message '{msg[1:20]}'... to topic '{topic}'")
+                else:
+                    print(f"Send message '{msg}' to topic '{topic}'")
         else:
             print(f"Failed to send message to topic {topic}")
-
-    @staticmethod
-    def subscribe(client: mqtt_client, topic, key=None):
-        def on_message(client, userdata, msg):
-
-            if key is not None:
-                print(f"Received '{KeyUtils.decrypt_message(msg.payload,key)}' from '{msg.topic}' topic")
-            else:
-                print(f"Received '{msg.payload.decode()}' from '{msg.topic}' topic")
-
-            client.msg_payload.append(msg.payload.decode())
-
-        client.subscribe(topic)
-        client.on_message = on_message
