@@ -23,13 +23,14 @@ def run():
 
     params_pem = parameters.parameter_bytes(Encoding.PEM, ParameterFormat.PKCS3)
 
-    randomNumber = random.randint(0, 1000)
-    client_id = f'client-platform-{randomNumber}'
+    # No hace falta random number, solo hay una plataforma
+    client_id = f'client-platform'
 
     client = Mqtt.connect_mqtt(client_id)
+    
     task = -1
     changekey = -1
-
+    '''
     while changekey != "0" and changekey != "1" and os.path.isfile("secret.key"):
         print("Do you want to generate another key? (0/1)")
         changekey = input()
@@ -37,7 +38,7 @@ def run():
     if changekey == "1" or os.path.isfile("secret.key") == False:
         print("Generating a new Fender key...")
         generate_key()
-
+    '''
 
     while task != "0" and task != "1":
         print("What do you want to do?")
@@ -69,8 +70,12 @@ def run():
             if client.msg_payload:
                 topic_new_params = "/topic/newConnect/" + str(client.msg_payload[0]) + "/params"
                 topic_new_pb = "/topic/newConnect/" + str(client.msg_payload[0]) + "/public"
+                # Parametros
                 Mqtt.publish(client, params_pem, topic_new_params)
-                Mqtt.publish(client, params_pem, topic_new_pb)
+                # Clave publica de la plataforma
+                Mqtt.publish(client, a_public_key, topic_new_pb)
+                # Se queda escuchando la clave publica del dispositivo
+                # PENDIENTE
             else:
                 print("Timeout 10 secs")
 

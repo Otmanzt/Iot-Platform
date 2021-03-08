@@ -38,8 +38,10 @@ def run():
         print("Generating a new Fender key...")
         generate_key()
     '''
+    
     randomNumber = random.randint(0, 1000)
     client_id = f'client-{randomNumber}'
+    
     topic_new_params = "/topic/newConnect/"+client_id+"/params"
     topic_new_pb = "/topic/newConnect/" + client_id + "/public"
     topic_request = "/topic/request"
@@ -57,6 +59,7 @@ def run():
     params_b = load_pem_parameters(str(client.msg_payload[0]).encode(), backend=default_backend())
     b_private_key = params_b.generate_private_key()
     b_public_key = b_private_key.public_key()
+    # Enviar la clave publica del dispositivo por el topic
     print(client.msg_payload[1])
     print(type(client.msg_payload[1]))
     b_shared_key = b_private_key.exchange(client.msg_payload[1].encode())
