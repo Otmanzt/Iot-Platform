@@ -11,7 +11,7 @@ from paquetes.keyUtils import *
 deviceList = {}
 
 def subscribe(client: mqtt_client, topic, key=None):
-    def on_message(client, userdata, msg):
+    def on_message(client, userdata, msg):       
         if key is not None:
             print(f"Received '{KeyUtils.decrypt_message(msg.payload, key)}' from '{msg.topic}' topic")
         else:
@@ -64,10 +64,10 @@ def run():
             topicOption = input()
 
             if topicOption == "0":
-                Mqtt.subscribe(client, "#")
+                subscribe(client, "#")
                 client.loop_forever()
             else:
-                Mqtt.subscribe(client, "/"+topicOption)
+                subscribe(client, "/"+topicOption)
                 client.loop_forever()
                 
         if task == "2":
@@ -99,11 +99,13 @@ def run():
                 a_shared_key = a_private_key.exchange(b_public_key)
                 
                 key = KeyUtils.convert_key(a_shared_key)
-                #time.sleep(18)
+                '''
                 client.loop_start()
                 subscribe(client, topic_message, key)
                 time.sleep(10)
                 client.loop_stop()
+                '''
+                deviceList[client.client_id] = key
             else:
                 print("Timeout 10 secs")
 
