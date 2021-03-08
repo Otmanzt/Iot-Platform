@@ -10,6 +10,17 @@ from paquetes.keyUtils import *
 
 deviceList = {}
 
+def subscribe(client: mqtt_client, topic, key=None):
+    def on_message(client, userdata, msg):
+        if key is not None:
+            print(f"Received '{KeyUtils.decrypt_message(msg.payload, key)}' from '{msg.topic}' topic")
+        else:
+            print(f"Received '{msg.payload.decode()}' from '{msg.topic}' topic")
+            if msg.topic == "/topic/newConnect/" + client.client_id + "/publicDevice":
+                client.b_public_key = int(msg.payload)
+
+    client.subscribe(topic)
+    client.on_message = on_message
 
 def run():
     parameters = dh.generate_parameters(generator=2, key_size=512, backend=default_backend())
@@ -66,16 +77,33 @@ def run():
             Mqtt.subscribe(client, topic_request)  # Topic para esperar la respuesta con los parametros de la plataforma
             time.sleep(10)
             client.loop_stop()
-
+            
             if client.msg_payload:
-                topic_new_params = "/topic/newConnect/" + str(client.msg_payload[0]) + "/params"
-                topic_new_pb = "/topic/newConnect/" + str(client.msg_payload[0]) + "/public"
+                client.client_id = str(client.msg_payload[0])
+                topic_new_params = "/topic/newConnect/" + client.client_id + "/params"
+                topic_new_pb_plat = "/topic/newConnect/" + client.client_id + "/publicPlatform"
+                topic_new_pb_device = "/topic/newConnect/" + client.client_id + "/publicDevice"
+                topic_message = "/topic/" + client.client_id + "/message"
                 # Parametros
                 Mqtt.publish(client, params_pem, topic_new_params)
                 # Clave publica de la plataforma
-                Mqtt.publish(client, a_public_key, topic_new_pb)
+                Mqtt.publish(client, a_public_key.public_numbers().y, topic_new_pb_plat)
                 # Se queda escuchando la clave publica del dispositivo
-                # PENDIENTE
+                client.loop_start()
+                subscribe(client, topic_new_pb_device)
+                time.sleep(10)
+                client.loop_stop()
+                
+                peer_public_numbers = dh.DHPublicNumbers(client.b_public_key, parameters.parameter_numbers())
+                b_public_key = peer_public_numbers.public_key(default_backend())
+                a_shared_key = a_private_key.exchange(b_public_key)
+                
+                key = KeyUtils.convert_key(a_shared_key)
+                #time.sleep(18)
+                client.loop_start()
+                subscribe(client, topic_message, key)
+                time.sleep(10)
+                client.loop_stop()
             else:
                 print("Timeout 10 secs")
 
