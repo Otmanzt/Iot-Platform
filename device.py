@@ -19,7 +19,7 @@ def subscribe(client: mqtt_client, topic, key=None):
             client.params_b = msg.payload.decode()
         if msg.topic == "/topic/newConnect/" + client_id + "/publicPlatform":
             client.a_public_key = int(msg.payload)
-        if msg.topic == "/topic/" + client_id + "/nonce" and msg.payload == "ACK":
+        if msg.topic == "topic/" + client_id + "/ack":
             client.ack = True
 
     client.subscribe(topic)
@@ -43,7 +43,8 @@ def run():
     topic_new_pb_device = "/topic/newConnect/" + client_id + "/publicDevice"
     topic_request = "/topic/request"   
     topic_message = "/topic/" + client_id + "/message"
-    topic_nonce = "/topic/" + client_id + "/nonce"
+    topic_nonce = "topic/" + client_id + "/nonce"
+    topic_ack = "topic/" + client_id + "/ack"
     
     # Conexion con MQTT
     client = Mqtt.connect_mqtt(client_id)
@@ -80,7 +81,7 @@ def run():
     key = KeyUtils.convert_key(b_shared_key)  
 
     message = "Test"
-    print("What kind of encryption do you want to use?")
+    print("What kind of encryption method do you want to use? (0-> Fernet, 1->AHEAD)")
     optionEncyption = int(input())
 
     if optionEncyption == 0:
@@ -99,9 +100,14 @@ def run():
         while True:
 
             Mqtt.publish(client, nonce, topic_nonce)
+
+            client.loop_start()
+            subscribe(client, topic_ack)  
             while not client.ack and time_init < time_out:
                 time.sleep(1)
                 time_init += 1
+
+            client.loop_stop()
 
             if(client.ack):
                 Mqtt.publish(client, mensaje_enc, topic_message)

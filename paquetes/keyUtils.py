@@ -48,7 +48,7 @@ class KeyUtils:
         cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
         decrypted_data = cipher.decrypt(encrypted_message)
 
-        return decrypted_data
+        return decrypted_data.decode()
 
     @staticmethod
     def convert_key(shared_key):

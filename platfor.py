@@ -13,17 +13,22 @@ def subscribe(client: mqtt_client, topic, key=None):
     def on_message(client, userdata, msg):    
 
         topic = msg.topic
-        print(topic[6:16])
+        
         if "message" in topic:
-            msg_client_id = topic[6:16]
-
+            msg_client_id = topic[7:17]
             try:
                 key = deviceList[msg_client_id]
 
                 try:
+                    key = key.decode()
+                    key = key[1:33]
+                    key = key.encode()
+
                     nonce = nonceMsg[msg_client_id]
                     print(f"Received '{KeyUtils.decrypt_message_aes(msg.payload, key, nonce)}' from '{topic}' topic")
                 except KeyError:
+
+                    key = deviceList[msg_client_id]
                     nonce = None
                     print(f"Received '{KeyUtils.decrypt_message(msg.payload, key)}' from '{topic}' topic")
                     pass
@@ -33,10 +38,9 @@ def subscribe(client: mqtt_client, topic, key=None):
                 pass
         else:
 
-            if topic == "/topic/" + topic[6:16] + "/nonce":
-                print(msg.payload)
-                nonceMsg[client.client_id] = msg.payload
-                Mqtt.publish(client, "ACK", "/topic/" + client.client_id + "/nonce")
+            if topic == "topic/" + topic[6:16] + "/nonce":
+                nonceMsg[topic[6:16]] = msg.payload
+                Mqtt.publish(client, "ACK", "topic/" + topic[6:16] + "/ack")
             else:
                 if topic == "/topic/request":
                     client.client_id = msg.payload.decode()
@@ -85,24 +89,24 @@ def run():
                 print("Please write the name of topic or 0 if you want to listen all existent topics.")
                 topicOption = input()
 
-                print("What kind of encryption do you want to use?")
+                print("What kind of decryption method do you want to use? (0-> Fernet, 1->AHEAD)")
                 optionEncyption = int(input())
 
                 if optionEncyption == 0:
                     if topicOption == "0":
-                        subscribe(client, "#")
+                        subscribe(client, "/topic/*/message")
                         client.loop_forever()
                     else:
-                        subscribe(client, "/" +topicOption)
+                        subscribe(client, "/topic/"+topicOption+"/message" "/")
                         client.loop_forever()
                 else:
                     if topicOption == "0":
-                        subscribe(client, "#")
-                        subscribe(client, topic_nonce)
+                        subscribe(client, "/topic/*/message")
+                        subscribe(client, "topic/*/nonce")
                         client.loop_forever()
                     else:
-                        subscribe(client, "/" +topicOption)
-                        subscribe(client, topic_nonce)
+                        subscribe(client, "topic/" + client.client_id + "/message")
+                        subscribe(client, "topic/" + client.client_id + "/nonce")
                         client.loop_forever()
             
             if task == "1":
@@ -140,7 +144,7 @@ def run():
                     topic_new_pb_plat = "/topic/newConnect/" + client.client_id + "/publicPlatform"
                     topic_new_pb_device = "/topic/newConnect/" + client.client_id + "/publicDevice"
                     topic_message = "/topic/" + client.client_id + "/message"
-                    topic_nonce= "/topic/" + client.client_id + "/nonce"
+                    topic_nonce= "topic/" + client.client_id + "/nonce"
                     # Parametros
                     Mqtt.publish(client, params_pem, topic_new_params)
                     # Clave publica de la plataforma
