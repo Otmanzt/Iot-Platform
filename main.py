@@ -39,27 +39,32 @@ def selecTopic():
 @app.route('/escucharTopic', methods=["POST"])
 def escuchar():
     topic = request.form['topic']
+    mensaje_recibido = []
+    time_out = 20
+    time_init = 0
 
     platform.client.loop_start()
-    subscribe(platform.client, topic)
+    subscribe(platform.client, topic, platform.device_list)
+
+    while time_init < time_out:
+        if hasattr(platform.client, 'message') and platform.client.message is not None:
+            mensaje_recibido.append(platform.client.message)
+        time.sleep(1)
+        time_init += 1
     platform.client.loop_stop()
-    '''
+
     if mensaje_recibido:
         response = {
-            "client_id": str(platform.client.client_id),
-            "mensaje": "Cliente nuevo encontrado",
+            "topic": topic,
+            "messages" : mensaje_recibido,
             "estado": True
         }
     else:
         response = {
-            "mensaje": "No hay peticiones nuevas",
+            "mensaje": "No hay mensajes nuevos",
             "estado": False
         }
-    '''
-    response = {
-        "topic": topic,
-        "estado": False
-    }
+
     response = json.dumps(response)
     return response
 

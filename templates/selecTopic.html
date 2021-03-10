@@ -5,17 +5,17 @@
     <div class="col-lg-12 text-center">
         <h1>Listar dispositivos</h1>
     </div>
-    <div class="offset-lg-2 col-lg-8" style="margin-top:20px">
-    <form class="row g-3">
+    <div class="offset-lg-2 col-lg-8 " style="margin-top:20px">
+    <form class="row g-3" id="formTopic">
       <div class="col-12">
         <label for="topic" class="form-label">Topic</label>
-        <input type="text" class="form-control" id="topic" name="topic" placeholder="Escribe # para escuchar todos">
+        <input type="text" class="form-control" id="topic" name="topic" placeholder="Escribe # para escuchar todos" required>
       </div>
-      <div class="col-12">
-        <button type="submit" class="btn btn-primary" id="comenzar">Comenzar</button>
+      <div class="d.col-12 d-flex justify-content-center">
+        <input type="submit" class="btn btn-primary" id="comenzar" value="Escuchar durante 20 segundos"></input>
       </div>
     </form>
-        <div id="spinner" class="mt-5 d-none">
+        <div id="spinner" class="mt-5 d-none d-flex justify-content-center">
             <div class="spinner-border" role="status">
               <span class="visually-hidden">Loading...</span>
             </div>
@@ -27,9 +27,10 @@
 {% endblock content %}
 
 {% block javascript%}
-    $("#comenzar").on("click",function(){
+    $("#formTopic").submit(function(ev){
+        ev.preventDefault();
         controlSpinner()
-        $(this).prop("disabled",true);
+        $("#comenzar").prop("disabled",true);
 	    		var fd = new FormData();
 		        var topic = $("#topic").val();
 		        fd.append('topic',topic);
@@ -43,14 +44,25 @@
 		                if(response != 0){
 		                	var obj = JSON.parse(response)
                             console.log(obj)
+                            controlSpinner()
+                            var html = "Mensajes recibidos de "+obj.topic+":<br>"
+                            if (obj.messages.length>0){
+                                for(var i = 0; i < obj.messages.length;i++){
+                                    html += obj.messages[i] +"<br>";
+                                }
+                            }
+                            inyectarRespuesta(html);
+                            $("#comenzar").prop("disabled",false);
 		                }else{
 		                	var html = "No se ha encontrado ningun dispositivo";
                             inyectarRespuesta(html);
+                            $("#comenzar").prop("disabled",false);
 		                }
 		            },
 		        });
 	    	})
     function inyectarRespuesta(texto){
+        $("#respuesta").html("")
         $("#respuesta").append(texto)
     }
     function controlSpinner(){

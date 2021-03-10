@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives.serialization import ParameterFormat
 from cryptography.hazmat.primitives.serialization import Encoding
 
 
-def subscribe(client: mqtt_client, topic, key=None):
+def subscribe(client: mqtt_client, topic, device_list=None, key=None):
     def on_message(client, userdata, msg):
 
         topic = msg.topic
@@ -16,6 +16,7 @@ def subscribe(client: mqtt_client, topic, key=None):
             try:
                 key = device_list[msg_client_id]
                 print(f"Received '{KeyUtils.decrypt_message(msg.payload, key)}' from '{topic}' topic")
+                client.message = KeyUtils.decrypt_message(msg.payload, key)
             except KeyError:
                 key = None
                 pass
