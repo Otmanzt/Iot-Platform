@@ -89,25 +89,14 @@ def run():
                 print("Please write the name of topic or 0 if you want to listen all existent topics.")
                 topicOption = input()
 
-                print("What kind of decryption method do you want to use? (0-> Fernet, 1->AHEAD)")
-                optionEncyption = int(input())
-
-                if optionEncyption == 0:
-                    if topicOption == "0":
-                        subscribe(client, "/topic/*/message")
-                        client.loop_forever()
-                    else:
-                        subscribe(client, "/topic/"+topicOption+"/message" "/")
-                        client.loop_forever()
+                if topicOption == "0":
+                    subscribe(client, "/topic/*/message")
+                    subscribe(client, "topic/*/nonce")
+                    client.loop_forever()
                 else:
-                    if topicOption == "0":
-                        subscribe(client, "/topic/*/message")
-                        subscribe(client, "topic/*/nonce")
-                        client.loop_forever()
-                    else:
-                        subscribe(client, "topic/" + client.client_id + "/message")
-                        subscribe(client, "topic/" + client.client_id + "/nonce")
-                        client.loop_forever()
+                    subscribe(client, "topic/" + client.client_id + "/message")
+                    subscribe(client, "topic/" + client.client_id + "/nonce")
+                    client.loop_forever()
             
             if task == "1":
 
