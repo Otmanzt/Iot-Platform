@@ -19,6 +19,8 @@ def subscribe(client: mqtt_client, topic, key=None):
             client.params_b = msg.payload.decode()
         if msg.topic == "/topic/newConnect/" + client_id + "/publicPlatform":
             client.a_public_key = int(msg.payload)
+        if msg.topic == "/topic/" + client_id + "/nonce" and msg.payload == "ACK":
+            client.ack = True
 
     client.subscribe(topic)
     client.on_message = on_message
@@ -29,6 +31,7 @@ def run():
     time_out = 20
     time_init = 0
 
+    optionEncyption = 0
     option = -1
     task = -1
     topicOption = -1
@@ -40,9 +43,11 @@ def run():
     topic_new_pb_device = "/topic/newConnect/" + client_id + "/publicDevice"
     topic_request = "/topic/request"   
     topic_message = "/topic/" + client_id + "/message"
+    topic_nonce = "/topic/" + client_id + "/nonce"
     
     # Conexion con MQTT
     client = Mqtt.connect_mqtt(client_id)
+    client.ack = False
 
     Mqtt.publish(client, client_id, topic_request)  # Topic para enviar la peticion de conexion nueva con la plataform
 
@@ -58,6 +63,8 @@ def run():
         time_init += 1
 
     client.loop_stop()
+
+    mensaje_recibido = False
     
     params_b = load_pem_parameters(str(client.params_b).encode(), backend=default_backend())
     
@@ -69,13 +76,37 @@ def run():
     peer_public_numbers = dh.DHPublicNumbers(client.a_public_key, params_b.parameter_numbers())
     a_public_key = peer_public_numbers.public_key(default_backend())
     b_shared_key = b_private_key.exchange(a_public_key)
-    print(b_public_key.public_numbers().y)
+
+    key = KeyUtils.convert_key(b_shared_key)  
+
     message = "Test"
-    key = KeyUtils.convert_key(b_shared_key)    
-    mensaje_enc = KeyUtils.encrypt_message(message,key)
-    while True:
-        Mqtt.publish(client, mensaje_enc, topic_message)
-        time.sleep(1)
-    
+    print("What kind of encryption do you want to use?")
+    optionEncyption = int(input())
+
+    if optionEncyption == 0:
+          
+        mensaje_enc = KeyUtils.encrypt_message(message,key)
+        while True:
+            Mqtt.publish(client, mensaje_enc, topic_message)
+            time.sleep(1)
+    else:
+        
+        key = key.decode()
+        key = key[1:33]
+        key = key.encode()
+
+        mensaje_enc, nonce = KeyUtils.encrypt_message_aes(message,key)
+        while True:
+
+            Mqtt.publish(client, nonce, topic_nonce)
+            while not client.ack and time_init < time_out:
+                time.sleep(1)
+                time_init += 1
+
+            if(client.ack):
+                Mqtt.publish(client, mensaje_enc, topic_message)
+                
+            time.sleep(1)
+
 if __name__ == '__main__':
     run()

@@ -2,6 +2,7 @@ from cryptography.fernet import Fernet
 import base64
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import hashes
+from Crypto.Cipher import AES
 
 class KeyUtils:
 
@@ -18,7 +19,6 @@ class KeyUtils:
     @staticmethod
     def encrypt_message(message, key):
 
-        #key = load_key()
         encoded_message = message.encode()
         f = Fernet(key)
         encrypted_message = f.encrypt(encoded_message)
@@ -26,13 +26,29 @@ class KeyUtils:
         return encrypted_message
 
     @staticmethod
+    def encrypt_message_aes(message, key):
+
+        cipher = AES.new(key, AES.MODE_GCM)
+        nonce = cipher.nonce
+        encrypted_message = cipher.encrypt(message.encode()) 
+
+        return encrypted_message, nonce
+
+    @staticmethod
     def decrypt_message(encrypted_message, key):
 
-        #key = load_key()
         f = Fernet(key)
         decrypted_message = f.decrypt(encrypted_message)
 
         return decrypted_message.decode()
+
+    @staticmethod
+    def decrypt_message_aes(encrypted_message, key, nonce):
+
+        cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
+        decrypted_data = cipher.decrypt(encrypted_message)
+
+        return decrypted_data
 
     @staticmethod
     def convert_key(shared_key):

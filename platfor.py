@@ -6,27 +6,45 @@ from paquetes.mqtt import *
 from paquetes.keyUtils import *
 
 deviceList = {}
+nonceMsg = {}
+optionEncyption = 0
 
 def subscribe(client: mqtt_client, topic, key=None):
     def on_message(client, userdata, msg):    
 
         topic = msg.topic
-
+        print(topic[6:16])
         if "message" in topic:
             msg_client_id = topic[6:16]
 
             try:
                 key = deviceList[msg_client_id]
-                print(f"Received '{KeyUtils.decrypt_message(msg.payload, key)}' from '{topic}' topic")
+
+                try:
+                    nonce = nonceMsg[msg_client_id]
+                    print(f"Received '{KeyUtils.decrypt_message_aes(msg.payload, key, nonce)}' from '{topic}' topic")
+                except KeyError:
+                    nonce = None
+                    print(f"Received '{KeyUtils.decrypt_message(msg.payload, key)}' from '{topic}' topic")
+                    pass
+
             except KeyError:
                 key = None
                 pass
         else:
-            if topic == "/topic/request":
-                client.client_id = msg.payload.decode()
-                print("Found new device: "+client.client_id+". Connecting...")
-            if topic == "/topic/newConnect/" + client.client_id + "/publicDevice":
-                client.b_public_key = int(msg.payload)
+
+            if topic == "/topic/" + topic[6:16] + "/nonce":
+                print(msg.payload)
+                nonceMsg[client.client_id] = msg.payload
+                Mqtt.publish(client, "ACK", "/topic/" + client.client_id + "/nonce")
+            else:
+                if topic == "/topic/request":
+                    client.client_id = msg.payload.decode()
+                    print("Found new device: "+client.client_id+". Connecting...")
+                if topic == "/topic/newConnect/" + client.client_id + "/publicDevice":
+                    client.b_public_key = int(msg.payload)
+            
+
             
     client.subscribe(topic)
     client.on_message = on_message
@@ -60,18 +78,32 @@ def run():
             task = input()
 
             client = Mqtt.connect_mqtt(name)
+            client.nonce = ""
 
             if task == "0":
 
                 print("Please write the name of topic or 0 if you want to listen all existent topics.")
                 topicOption = input()
 
-                if topicOption == "0":
-                    subscribe(client, "#")
-                    client.loop_forever()
+                print("What kind of encryption do you want to use?")
+                optionEncyption = int(input())
+
+                if optionEncyption == 0:
+                    if topicOption == "0":
+                        subscribe(client, "#")
+                        client.loop_forever()
+                    else:
+                        subscribe(client, "/" +topicOption)
+                        client.loop_forever()
                 else:
-                    subscribe(client, "/"+topicOption)
-                    client.loop_forever()
+                    if topicOption == "0":
+                        subscribe(client, "#")
+                        subscribe(client, topic_nonce)
+                        client.loop_forever()
+                    else:
+                        subscribe(client, "/" +topicOption)
+                        subscribe(client, topic_nonce)
+                        client.loop_forever()
             
             if task == "1":
 
@@ -102,11 +134,13 @@ def run():
                 client.loop_stop()
                 
                 if mensaje_recibido:
+                    mensaje_recibido = False
 
                     topic_new_params = "/topic/newConnect/" + client.client_id + "/params"
                     topic_new_pb_plat = "/topic/newConnect/" + client.client_id + "/publicPlatform"
                     topic_new_pb_device = "/topic/newConnect/" + client.client_id + "/publicDevice"
                     topic_message = "/topic/" + client.client_id + "/message"
+                    topic_nonce= "/topic/" + client.client_id + "/nonce"
                     # Parametros
                     Mqtt.publish(client, params_pem, topic_new_params)
                     # Clave publica de la plataforma
@@ -124,13 +158,15 @@ def run():
                         time_init += 1
                     client.loop_stop()
 
+                    mensaje_recibido = False
+
                     peer_public_numbers = dh.DHPublicNumbers(client.b_public_key, parameters.parameter_numbers())
                     b_public_key = peer_public_numbers.public_key(default_backend())
                     a_shared_key = a_private_key.exchange(b_public_key)
 
                     key = KeyUtils.convert_key(a_shared_key)
                     deviceList[client.client_id] = key
-
+                    
                     print("Connected to device. Select a topic to listen the messages.")
                 else:
                     print("Device not found.")

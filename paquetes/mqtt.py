@@ -24,8 +24,6 @@ class Mqtt:
 
     @staticmethod
     def publish(client, msg, topic, key=None):
-        if key is not None:
-            msg = KeyUtils.encrypt_message(msg, key)
 
         result = client.publish(topic, msg)
 
