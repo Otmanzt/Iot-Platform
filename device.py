@@ -63,13 +63,13 @@ def run():
     
     b_private_key = params_b.generate_private_key()
     b_public_key = b_private_key.public_key()
-    
-    
+
+
     Mqtt.publish(client, b_public_key.public_numbers().y, topic_new_pb_device)
     peer_public_numbers = dh.DHPublicNumbers(client.a_public_key, params_b.parameter_numbers())
     a_public_key = peer_public_numbers.public_key(default_backend())
     b_shared_key = b_private_key.exchange(a_public_key)
-
+    print(b_public_key.public_numbers().y)
     message = "Test"
     key = KeyUtils.convert_key(b_shared_key)    
     mensaje_enc = KeyUtils.encrypt_message(message,key)
