@@ -1,6 +1,7 @@
 
 from flask import Flask, render_template, request, redirect, url_for, session
 from platform_web import *
+from datetime import datetime
 import json
 app = Flask(__name__, static_url_path='/static')
 platform = Platform()
@@ -55,13 +56,14 @@ def escuchar():
 
     if mensaje_recibido:
         response = {
-            "topic": topic,
-            "messages" : mensaje_recibido,
+            "topic": platform.client.topic_client,
+            "messages": mensaje_recibido,
             "estado": True
         }
+        platform.re_init_buffer()
     else:
         response = {
-            "mensaje": "No hay mensajes nuevos",
+            "messages": [],
             "estado": False
         }
 
@@ -75,12 +77,12 @@ def peticion_nuevo_dispositivo():
     mensaje_recibido = False
     time_out = 20
     time_init = 0
-
+    platform.reboot_client()
     platform.client.loop_start()
     subscribe(platform.client, topic_request)  # Topic para esperar la respuesta con los parametros de la plataforma
     print("Esperando Cliente nuevo")
     while not mensaje_recibido and time_init < time_out:
-        if hasattr(platform.client, 'client_id') and platform.client.client_id is not None:
+        if hasattr(platform.client, 'client_id'):
             mensaje_recibido = True
         time.sleep(1)
         time_init += 1
@@ -124,7 +126,7 @@ def intercambio_claves():
     subscribe(platform.client, topic_new_pb_device)
     print("Esperando clave pública del dispositivo...")
     while not mensaje_recibido and time_init < time_out:
-        if hasattr(platform.client, 'b_public_key') and platform.client.b_public_key is not None:
+        if hasattr(platform.client, 'b_public_key'):
             mensaje_recibido = True
         time.sleep(1)
         time_init += 1

@@ -10,7 +10,7 @@ def subscribe(client: mqtt_client, topic, device_list=None, key=None):
     def on_message(client, userdata, msg):
 
         topic = msg.topic
-        if "message" in topic:
+        if "message" in msg.topic:
             if topic[0] != '/':
                 msg_client_id = topic[6:16]
             else:
@@ -21,6 +21,7 @@ def subscribe(client: mqtt_client, topic, device_list=None, key=None):
                 key = device_list[msg_client_id]
                 print(f"Received '{KeyUtils.decrypt_message(msg.payload, key)}' from '{topic}' topic")
                 client.message = KeyUtils.decrypt_message(msg.payload, key)
+                client.topic_client = topic
             except KeyError:
                 key = None
                 pass
@@ -50,8 +51,16 @@ class Platform:
         return params_pem
 
     def re_init_params(self):
-        self.client.client_id = None
-        self.client.b_public_key = None
+        delattr(self.client, 'client_id')
+        delattr(self.client, 'b_public_key')
+
+    def re_init_buffer(self):
+        delattr(self.client, 'message')
+        delattr(self.client, 'topic_client')
 
     def delete_item(self, key):
         self.device_list.pop(key)
+
+    def reboot_client(self):
+        delattr(self, 'client')
+        self.client = Mqtt.connect_mqtt(self.client_id)
