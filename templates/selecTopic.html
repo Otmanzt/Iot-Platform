@@ -3,7 +3,7 @@
 
 <div class="row">
     <div class="col-lg-12 text-center">
-        <h1>Listar dispositivos</h1>
+        <h1>Escuchar Topics</h1>
     </div>
     <div class="offset-lg-2 col-lg-8 " style="margin-top:20px">
     <form class="row g-3" id="formTopic">
@@ -20,7 +20,7 @@
               <span class="visually-hidden">Loading...</span>
             </div>
         </div>
-        <div id="respuesta"></div>
+        <div class="mt-5" id="respuesta"></div>
 </div>
 </div>
 <br/>
@@ -45,11 +45,20 @@
 		                	var obj = JSON.parse(response)
                             console.log(obj)
                             controlSpinner()
-                            var html = "Mensajes recibidos de "+obj.topic+":<br>"
+
                             if (obj.messages.length>0){
+                                var html = "<b>Mensajes recibidos de "+obj.topic+":</b><br>"
+                                html +='<ul class="list-group">'
+
                                 for(var i = 0; i < obj.messages.length;i++){
-                                    html += obj.messages[i] +"<br>";
+                                    html += '<li class="list-group-item">'
+                                    html += "<b>Texto: </b> " + obj.messages[i];
+                                    html += '</li>';
                                 }
+
+                                html +='</ul>'
+                            }else{
+                                var html = "No hay ning&uacute;n mensaje<br>"
                             }
                             inyectarRespuesta(html);
                             $("#comenzar").prop("disabled",false);
