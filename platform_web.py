@@ -11,8 +11,12 @@ def subscribe(client: mqtt_client, topic, device_list=None, key=None):
 
         topic = msg.topic
         if "message" in topic:
-            msg_client_id = topic[6:16]
-
+            if topic[0] != '/':
+                msg_client_id = topic[6:16]
+            else:
+                msg_client_id = topic[7:17]
+            print(topic)
+            print(msg_client_id)
             try:
                 key = device_list[msg_client_id]
                 print(f"Received '{KeyUtils.decrypt_message(msg.payload, key)}' from '{topic}' topic")

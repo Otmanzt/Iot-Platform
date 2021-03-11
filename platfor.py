@@ -15,7 +15,10 @@ def subscribe(client: mqtt_client, topic, key=None):
         topic = msg.topic
         
         if "message" in topic:
-            msg_client_id = topic[7:17]
+            if topic[0] != '/':
+                msg_client_id = topic[6:16]
+            else:
+                msg_client_id = topic[7:17]
             try:
                 key = deviceList[msg_client_id]
 
@@ -94,7 +97,7 @@ def run():
                     subscribe(client, "topic/*/nonce")
                     client.loop_forever()
                 else:
-                    subscribe(client, "topic/" + client.client_id + "/message")
+                    subscribe(client, "/topic/" + client.client_id + "/message")
                     subscribe(client, "topic/" + client.client_id + "/nonce")
                     client.loop_forever()
             
