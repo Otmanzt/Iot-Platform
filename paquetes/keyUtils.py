@@ -4,6 +4,7 @@ from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import hashes
 from Crypto.Cipher import AES
 
+
 class KeyUtils:
 
     @staticmethod
@@ -35,20 +36,28 @@ class KeyUtils:
         return encrypted_message, nonce
 
     @staticmethod
-    def decrypt_message(encrypted_message, key):
-
-        f = Fernet(key)
-        decrypted_message = f.decrypt(encrypted_message)
-
-        return decrypted_message.decode()
+    def decrypt_message(encrypted_message, key, hmacDevice, hmacLocal):
+        
+        if hmacDevice == hmacLocal:
+        
+            f = Fernet(key)
+            decrypted_message = f.decrypt(encrypted_message)
+            return decrypted_message.decode()
+        else:
+            return None
+        
 
     @staticmethod
-    def decrypt_message_aes(encrypted_message, key, nonce):
+    def decrypt_message_aes(encrypted_message, key, nonce, hmacDevice, hmacLocal):
+        
+        if hmacDevice == hmacLocal:
 
-        cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
-        decrypted_data = cipher.decrypt(encrypted_message)
+            cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
+            decrypted_data = cipher.decrypt(encrypted_message)
 
-        return decrypted_data.decode()
+            return decrypted_data.decode()
+        else:
+            return None
 
     @staticmethod
     def convert_key(shared_key):

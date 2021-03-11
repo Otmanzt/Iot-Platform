@@ -7,6 +7,9 @@ from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.hazmat.primitives.serialization import load_pem_parameters
 from paquetes.mqtt import *
 from paquetes.keyUtils import *
+import hmac
+from hashlib import md5
+import json 
 
 randomNumber = random.randint(100, 999)
 client_id = f'client-{randomNumber}'
@@ -24,6 +27,9 @@ def subscribe(client: mqtt_client, topic, key=None):
 
     client.subscribe(topic)
     client.on_message = on_message
+    
+def hmac_md5(key, msg):
+    return hmac.HMAC(key, msg, md5)
 
 def run():
 
@@ -78,7 +84,11 @@ def run():
     a_public_key = peer_public_numbers.public_key(default_backend())
     b_shared_key = b_private_key.exchange(a_public_key)
 
-    key = KeyUtils.convert_key(b_shared_key)  
+    key = KeyUtils.convert_key(b_shared_key) 
+     
+    # Variables para autenticacion HMAC
+    private_shared_key = b'bc12b45'
+    mensaje = {}
 
     message = "Test"
     print("What kind of encryption method do you want to use? (0-> Fernet, 1->AHEAD)")
@@ -87,16 +97,28 @@ def run():
     if optionEncyption == 0:
           
         mensaje_enc = KeyUtils.encrypt_message(message,key)
+        # HMAC
+        hmac = hmac_md5(private_shared_key, mensaje_enc)
+        
+        mensaje['msg_encriptado'] = mensaje_enc
+        mensaje['hmac'] = base64.b64encode(hmac.digest()).decode()
+        
         while True:
-            Mqtt.publish(client, mensaje_enc, topic_message)
+            Mqtt.publish(client, str(mensaje), topic_message)
             time.sleep(1)
     else:
         
         key = key.decode()
         key = key[1:33]
         key = key.encode()
+        
 
         mensaje_enc, nonce = KeyUtils.encrypt_message_aes(message,key)
+        mensaje['msg_encriptado'] = mensaje_enc
+        # HMAC
+        hmac = hmac_md5(private_shared_key, mensaje_enc)
+        
+        mensaje['hmac'] = base64.b64encode(hmac.digest()).decode()
         while True:
 
             Mqtt.publish(client, nonce, topic_nonce)
@@ -110,7 +132,7 @@ def run():
             client.loop_stop()
 
             if(client.ack):
-                Mqtt.publish(client, mensaje_enc, topic_message)
+                Mqtt.publish(client, str(mensaje), topic_message)
                 
             time.sleep(1)
 
