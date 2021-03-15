@@ -12,6 +12,7 @@ from hashlib import md5
 import json 
 
 randomNumber = random.randint(100, 999)
+master_key = KeyUtils().load_key()
 client_id = f'client-{randomNumber}'
 
 
@@ -39,7 +40,7 @@ def run():
     time_out = 20
     time_init = 0
     autenticado = True
-    master_key = KeyUtils().load_key()
+    
     optionEncyption = 0
     option = -1
     task = -1
