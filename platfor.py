@@ -10,6 +10,7 @@ from hashlib import md5
 deviceList = {}
 nonceMsg = {}
 optionEncyption = 0
+tipoEscenario = 0 
 
 def subscribe(client: mqtt_client, topic, key=None):
     def on_message(client, userdata, msg):    
@@ -30,28 +31,43 @@ def subscribe(client: mqtt_client, topic, key=None):
                     key = key.encode()
                     
                     nonce = nonceMsg[msg_client_id]
+                    
+                    if tipoEscenario == 0:
                                        
-                    private_shared_key = b'bc12ba5'
-                    mensajeDict = eval(msg.payload)
-                    hmacLocal = hmac_md5(private_shared_key, mensajeDict['msg_encriptado'])
-                    hmacLocal = base64.b64encode(hmacLocal.digest()).decode()
+                        private_shared_key = b'bc12b45'
+                        mensajeDict = eval(msg.payload)
+                        hmacLocal = hmac_md5(private_shared_key, mensajeDict['msg_encriptado'])
+                        hmacLocal = base64.b64encode(hmacLocal.digest()).decode()
+                        
+                        if KeyUtils.decrypt_message_aes(mensajeDict['msg_encriptado'], key,nonce, mensajeDict['hmac'], hmacLocal) is not None:
+                            print("HMAC correcto, se ha verificado la autenticacion")
+                            print(f"Received '{KeyUtils.decrypt_message_aes(mensajeDict['msg_encriptado'], key, nonce, mensajeDict['hmac'], hmacLocal)}' from '{topic}' topic")
+                        else:
+                            print("Los HMAC no coinciden no se ha podido verificar la autenticacion.")
+                        
+                    elif tipoEscenario == 1:
+
+                        
+                        if mensajeDict is not None:
+                            print(f"Received '{KeyUtils.decrypt_message_aes(mensajeDict['msg_encriptado'], key, nonce, hmacLocal, hmacLocal)}' from '{topic}' topic")
+                        
+                    elif tipoEscenario == 2:
+                        print("Introduce el HMAC del dispositivo: ")
                     
-                    if KeyUtils.decrypt_message_aes(mensajeDict['msg_encriptado'], key,nonce, mensajeDict['hmac'], hmacLocal) is not None:
-                        print("HMAC correcto, se ha verificado la autenticacion")
-                    else:
-                        print("Los HMAC no coinciden no se ha podido verificar la autenticacion.")
-                    
-                    print(f"Received '{KeyUtils.decrypt_message_aes(mensajeDict['msg_encriptado'], key, nonce, mensajeDict['hmac'], hmacLocal)}' from '{topic}' topic")
                 except KeyError:
-                    private_shared_key = b'bc12b35'
-                    mensajeDict = eval(msg.payload)
-                    hmacLocal = hmac_md5(private_shared_key, mensajeDict['msg_encriptado'])
-                    hmacLocal = base64.b64encode(hmacLocal.digest()).decode()
-                    key = deviceList[msg_client_id]
-                    if KeyUtils.decrypt_message(mensajeDict['msg_encriptado'], key, mensajeDict['hmac'], hmacLocal) is not None:
-                        print("HMAC correcto, se ha verificado la autenticacion")
-                    else:
-                        print("Los HMAC no coinciden no se ha podido verificar la autenticacion.")
+                    if tipoEscenario == 0:
+                        private_shared_key = b'bc12b45'
+                        mensajeDict = eval(msg.payload)
+                        hmacLocal = hmac_md5(private_shared_key, mensajeDict['msg_encriptado'])
+                        hmacLocal = base64.b64encode(hmacLocal.digest()).decode()
+                        key = deviceList[msg_client_id]
+                        if KeyUtils.decrypt_message(mensajeDict['msg_encriptado'], key, mensajeDict['hmac'], hmacLocal) is not None:
+                            print("HMAC correcto, se ha verificado la autenticacion")
+                        else:
+                            print("Los HMAC no coinciden no se ha podido verificar la autenticacion.")
+                    elif tipoEscenario == 1:
+                        
+                    elif tipoEscenario == 2:
                     
                     nonce = None
                     print(f"Received '{KeyUtils.decrypt_message(mensajeDict['msg_encriptado'], key, mensajeDict['hmac'], hmacLocal)}' from '{topic}' topic")
@@ -66,8 +82,10 @@ def subscribe(client: mqtt_client, topic, key=None):
                 nonceMsg[topic[6:16]] = msg.payload
                 Mqtt.publish(client, "ACK", "topic/" + topic[6:16] + "/ack")
             else:
-                if topic == "/topic/request":
-                    client.client_id = msg.payload.decode()
+                if topic in "/topic/request":
+                    clienteDict = eval(msg.payload)
+                    client.client_id = clienteDict['client_id']
+                    tipoEscenario = clienteDict['tipoEscenario']
                     print("Found new device: "+client.client_id+". Connecting...")
                 if topic == "/topic/newConnect/" + client.client_id + "/publicDevice":
                     client.b_public_key = int(msg.payload)

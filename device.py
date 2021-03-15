@@ -1,5 +1,5 @@
 import random
-import os.path
+#import os.path
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import dh
 from cryptography.hazmat.primitives.serialization import ParameterFormat
@@ -42,7 +42,15 @@ def run():
     task = -1
     topicOption = -1
     changekey = -1
+    tipoEscenario = 0
     
+    # Eleccion de escenario
+    print("Elija el tipo de escenario:")
+    print("0 - Sin entrada ni salida.")
+    print("1 - Entrada.")
+    print("2 - Salida.")
+    tipoEscenario = int(input())
+
     # TOPICS
     topic_new_params = "/topic/newConnect/"+client_id+"/params"
     topic_new_pb_plat = "/topic/newConnect/" + client_id + "/publicPlatform"
@@ -52,11 +60,18 @@ def run():
     topic_nonce = "topic/" + client_id + "/nonce"
     topic_ack = "topic/" + client_id + "/ack"
     
+
+    
     # Conexion con MQTT
     client = Mqtt.connect_mqtt(client_id)
     client.ack = False
+    
+    # Creamos un nuevo dict para anadir el tipo de escenario para comunicarlo a la plataforma
+    cliente = {}
+    cliente['client_id'] = client_id
+    cliente['tipoEscenario'] = tipoEscenario
 
-    Mqtt.publish(client, client_id, topic_request)  # Topic para enviar la peticion de conexion nueva con la plataform
+    Mqtt.publish(client, str(cliente), topic_request)  # Topic para enviar la peticion de conexion nueva con la plataform
 
     client.loop_start()
     subscribe(client, topic_new_params)  # Topic para esperar la respuesta con los parametros de la plataforma
@@ -85,9 +100,9 @@ def run():
     b_shared_key = b_private_key.exchange(a_public_key)
 
     key = KeyUtils.convert_key(b_shared_key) 
-     
+    
     # Variables para autenticacion HMAC
-    private_shared_key = b'bc12b45'
+    private_shared_key = b'bc12b46'
     mensaje = {}
 
     message = "Test"
@@ -97,11 +112,24 @@ def run():
     if optionEncyption == 0:
           
         mensaje_enc = KeyUtils.encrypt_message(message,key)
-        # HMAC
-        hmac = hmac_md5(private_shared_key, mensaje_enc)
         
-        mensaje['msg_encriptado'] = mensaje_enc
-        mensaje['hmac'] = base64.b64encode(hmac.digest()).decode()
+        if tipoEscenario == 0:
+            # HMAC
+            hmac = hmac_md5(private_shared_key, mensaje_enc)
+            
+            mensaje['msg_encriptado'] = mensaje_enc
+            mensaje['hmac'] = base64.b64encode(hmac.digest()).decode()
+        elif tipoEscenario == 1:
+            print("Introduce el HMAC de la plataforma: ")
+            hmacPlat = input()
+            # HMAC
+            hmacLocal = hmac_md5(private_shared_key, mensaje_enc)
+            if hmacLocal == hmacPlat:
+                print("Los HMAC coinciden. Se ha verificado la autenticación.")
+                mensaje['msg_encriptado'] = mensaje_enc
+                # Habria que cambiar la recepcion del mensaje en la plataforma cuando es de entrada
+            else:
+                print("Los HMAC no coinciden. No se ha verificado la autenticación.")
         
         while True:
             Mqtt.publish(client, str(mensaje), topic_message)
