@@ -36,7 +36,7 @@ class KeyUtils:
         return encrypted_message, nonce
 
     @staticmethod
-    def decrypt_message(encrypted_message, key, hmacDevice, hmacLocal):
+    def decrypt_message(encrypted_message, key, hmacDevice=0, hmacLocal=0):
         
         if hmacDevice == hmacLocal:
         
@@ -48,7 +48,7 @@ class KeyUtils:
         
 
     @staticmethod
-    def decrypt_message_aes(encrypted_message, key, nonce, hmacDevice, hmacLocal):
+    def decrypt_message_aes(encrypted_message, key, nonce, hmacDevice=0, hmacLocal=0):
         
         if hmacDevice == hmacLocal:
 

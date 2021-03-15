@@ -23,7 +23,7 @@
         <input type="text" class="form-control" id="claveAuth" name="claveAuth" placeholder="Escribe la clave que aparece en la pantalla del dispositivo" required>
       </div>
       <div class="d.col-12 d-flex justify-content-center">
-        <input type="submit" class="btn btn-primary" id="enviar" value="Enviar"/>
+        <input type="submit" class="btn btn-primary" id="enviar" value="Enviar" disabled/>
       </div>
     </form>
 </div>
@@ -44,10 +44,19 @@
 		            success: function(response){
 		                if(response != 0){
 		                	var obj = JSON.parse(response)
+                            console.log(obj)
                             var html = "<b>ID del Cliente: </b> " + obj.client_id;
                             html +="<br> Realizando el intercambio de claves... <br>"
                             inyectarRespuesta(html);
-                            intercambio()
+                            if(obj.tipo == 1){
+                                // Mostrar Codigo random
+                            }else if(obj.tipo == 2){
+                                $("#formAuth").toggleClass("d-none")
+                                $("#enviar").prop("disabled",false);
+                            }else{
+                                intercambio()
+                            }
+
 		                }else{
 		                	var html = "No se ha encontrado ningun dispositivo";
                             inyectarRespuesta(html);
@@ -82,4 +91,32 @@
 		            },
 		        });
     }
+    $("#formAuth").submit(function intercambioSalida(ev){
+                ev.preventDefault();
+                $("#formAuth").toggleClass("d-none")
+                $("#enviar").prop("disabled",true);
+                var fd = new FormData();
+		        var clave_auth = $("#claveAuth").val();
+		        fd.append('clave_auth',clave_auth);
+		        $.ajax({
+		            url: '/intercambio',
+		            type: 'post',
+		            contentType: false,
+                    data: fd,
+		            processData: false,
+		            success: function(response){
+			                if(response != 0){
+		                	var obj = JSON.parse(response)
+                            var html = "<b>Pub-Key del Cliente: </b> " + obj.pub_key;
+                            html += "<br> Intercambio realizado con exito. Cliente conectado. <br>"
+                            html += "<br> Conectate al topic '" + obj.topic + "' para escuchar los mensajes"
+                            inyectarRespuesta(html);
+                            controlSpinner()
+		                }else{
+		                	var html = "No se ha encontrado ningun dispositivo";
+                            inyectarRespuesta(html);
+		                }
+		            },
+		        });
+    })
 {% endblock javascript%}

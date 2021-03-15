@@ -1,6 +1,6 @@
 Flask==1.1.2
 pycryptodome
 scrypt
-paho-mqtt
-cryptography
+paho-mqtt~=1.5.1
+cryptography~=3.4.6
 
