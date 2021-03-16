@@ -27,6 +27,8 @@ def subscribe(client: mqtt_client, topic, key=None):
             client.ack = True
         if msg.topic == "/topic/" + client_id + "/auth":
             client.clave_auth = msg.payload
+        if msg.topic == "/topic/" + client_id + "/auth/ack":
+            client.auth_ack = msg.payload
 
     client.subscribe(topic)
     client.on_message = on_message
@@ -39,7 +41,7 @@ def run():
     mensaje_recibido = False
     time_out = 20
     time_init = 0
-    autenticado = True
+    autenticado = "True"
     
     optionEncyption = 0
     option = -1
@@ -72,13 +74,26 @@ def run():
     client.ack = False
     
     # Creamos un nuevo dict para anadir el tipo de escenario para comunicarlo a la plataforma
-    cliente = {}
-    cliente['client_id'] = client_id
-    cliente['tipoEscenario'] = tipoEscenario
+    cliente = {'client_id': client_id, 'tipoEscenario': tipoEscenario}
 
     Mqtt.publish(client, str(cliente), topic_request)  # Topic para enviar la peticion de conexion nueva con la plataform
+    if tipoEscenario == 1:
+        print("Introduce el codigo de autenticacion de la plataforma: ")
+        numero_random = int(input())
 
-    if tipoEscenario == 2:
+        codigo_auth = KeyUtils().encrypt_message(str(numero_random), master_key)
+        client.loop_start()
+        Mqtt.publish(client, codigo_auth, topic_auth)
+        subscribe(client, topic_auth_ack)
+        while not mensaje_recibido and time_init < time_out:
+            if hasattr(client, 'auth_ack'):
+                mensaje_recibido = True
+                autenticado = KeyUtils().decrypt_message(client.auth_ack, master_key)
+            time.sleep(1)
+            time_init += 1
+        client.loop_stop()
+
+    elif tipoEscenario == 2:
         numero_random = str(random.randint(1000, 9999))
         print("Clave aleatoria es: " + numero_random)
         client.loop_start()
@@ -97,8 +112,9 @@ def run():
     confirmacion = KeyUtils.encrypt_message(str(autenticado), master_key)
     Mqtt.publish(client, confirmacion, topic_auth_ack)
 
-    if autenticado:
+    if autenticado == "True":
         client.loop_start()
+
         subscribe(client, topic_new_params)  # Topic para esperar la respuesta con los parametros de la plataforma
         subscribe(client, topic_new_pb_plat)  # Topic para esperar la respuesta con los parametros de la plataforma
         print("Conectando a la plataforma... Espere por favor.")
@@ -110,6 +126,7 @@ def run():
         while not mensaje_recibido and time_init < time_out:
             if hasattr(client, 'a_public_key') and hasattr(client, 'params_b'):
                 mensaje_recibido = True
+                print("Paquete recibido")
             time.sleep(1)
             time_init += 1
 

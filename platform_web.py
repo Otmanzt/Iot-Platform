@@ -37,6 +37,17 @@ def subscribe(client: mqtt_client, topic, device_list=None, key=None):
             except KeyError:
                 key = None
                 pass
+        elif "auth" in msg.topic:
+            if topic[0] != '/':
+                msg_client_id = topic[6:16]
+            else:
+                msg_client_id = topic[7:17]
+
+            try:
+                client.clave_auth = KeyUtils.decrypt_message(msg.payload, Platform().master_key)
+            except KeyError:
+                key = None
+                pass
 
         else:
             if topic == "/topic/request":

@@ -19,7 +19,7 @@
         </div>
         <form class="row g-3 d-none" id="formAuth">
       <div class="col-12">
-        <label for="topic" class="form-label">Clave autenticaci&oacute;</label>
+        <label for="topic" class="form-label">Clave autenticaci&oacute;n</label>
         <input type="text" class="form-control" id="claveAuth" name="claveAuth" placeholder="Escribe la clave que aparece en la pantalla del dispositivo" required>
       </div>
       <div class="d.col-12 d-flex justify-content-center">
@@ -47,16 +47,19 @@
                             console.log(obj)
                             var html = "<b>ID del Cliente: </b> " + obj.client_id;
                             html +="<br> Realizando el intercambio de claves... <br>"
-                            inyectarRespuesta(html);
+
                             if(obj.tipo == 1){
                                 // Mostrar Codigo random
+                                numeroRandom = Math.floor(Math.random() * 9999) + 1000;
+                                html +="<br> El dipositivo solo tiene entrada. Introducir este c&oacute;digo para la autenticaci&oacute;n: <br><b>" + numeroRandom + "</b>";
+                                intercambio(numeroRandom)
                             }else if(obj.tipo == 2){
                                 $("#formAuth").toggleClass("d-none")
                                 $("#enviar").prop("disabled",false);
                             }else{
-                                intercambio()
+                                intercambio(0)
                             }
-
+                            inyectarRespuesta(html);
 		                }else{
 		                	var html = "No se ha encontrado ningun dispositivo";
                             inyectarRespuesta(html);
@@ -70,11 +73,15 @@
     function controlSpinner(){
         $("#spinner").toggleClass("d-none")
     }
-    function intercambio(){
+    function intercambio(numeroRandom){
+                var fd = new FormData();
+		        var clave_auth = $("#claveAuth").val();
+		        fd.append('numero_random',numeroRandom)
         $.ajax({
 		            url: '/intercambio',
 		            type: 'post',
 		            contentType: false,
+                    data:fd,
 		            processData: false,
 		            success: function(response){
 		                if(response != 0){

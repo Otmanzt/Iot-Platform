@@ -111,15 +111,17 @@ def intercambio_claves():
     time_out = 20
     time_init = 0
     clave_auth = ''
+    numero_random = None
+    topic_auth = "/topic/" + platform.client.client_id + "/auth"
+    topic_auth_ack = "/topic/" + platform.client.client_id + "/auth/ack"
 
     if 'clave_auth' in request.form:
         clave_auth = request.form['clave_auth']
-
+    if 'numero_random' in request.form:
+        numero_random = request.form['numero_random']
 
     if clave_auth != '':
         codigo_auth = KeyUtils().encrypt_message(clave_auth, platform.master_key)
-        topic_auth = "/topic/" + platform.client.client_id + "/auth"
-        topic_auth_ack = "/topic/" + platform.client.client_id + "/auth/ack"
         platform.client.loop_start()
         Mqtt.publish(platform.client, codigo_auth, topic_auth)
         subscribe(platform.client, topic_auth_ack)
@@ -132,6 +134,21 @@ def intercambio_claves():
             time_init += 1
         platform.client.loop_stop()
 
+    if numero_random != '0':
+        platform.client.loop_start()
+        subscribe(platform.client, topic_auth)
+        while not mensaje_recibido:
+            if hasattr(platform.client, 'clave_auth'):
+                mensaje_recibido = True
+                num_descifrado = platform.client.clave_auth
+                if num_descifrado != numero_random:
+                    autenticado = "False"
+            time.sleep(1)
+            time_init += 1
+        confirmacion = KeyUtils.encrypt_message(str(autenticado), platform.master_key)
+        Mqtt.publish(platform.client, confirmacion, topic_auth_ack)
+        platform.client.loop_stop()
+
     mensaje_recibido = False
     time_out = 20
     time_init = 0
@@ -142,15 +159,18 @@ def intercambio_claves():
         topic_new_pb_device = "/topic/newConnect/" + platform.client.client_id + "/publicDevice"
         topic_message = "/topic/" + platform.client.client_id + "/message"
 
-        # Parametros
-        params_pem = platform.export_parameters()
-        Mqtt.publish(platform.client, params_pem, topic_new_params)
-        # Clave publica de la plataforma
-        Mqtt.publish(platform.client, platform.a_public_key.public_numbers().y, topic_new_pb_plat)
+
+
         # Se queda escuchando la clave publica del dispositivo
         mensaje_recibido = False
         time_init = 0
         platform.client.loop_start()
+        # Parametros
+        params_pem = platform.export_parameters()
+        time.sleep(5)
+        Mqtt.publish(platform.client, params_pem, topic_new_params)
+        # Clave publica de la plataforma
+        Mqtt.publish(platform.client, platform.a_public_key.public_numbers().y, topic_new_pb_plat)
         subscribe(platform.client, topic_new_pb_device)
         print("Esperando clave pública del dispositivo...")
         while not mensaje_recibido and time_init < time_out:
