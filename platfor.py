@@ -34,7 +34,7 @@ def subscribe(client: mqtt_client, topic, key=None):
                     
                     nonce = nonceMsg[msg_client_id]
                                            
-                    private_shared_key = b'bc12b45'
+                    private_shared_key = b'bc12b46'
                     mensajeDict = eval(msg.payload)
                     hmacLocal = hmac_md5(private_shared_key, mensajeDict['msg_encriptado'])
                     hmacLocal = base64.b64encode(hmacLocal.digest()).decode()
@@ -47,7 +47,7 @@ def subscribe(client: mqtt_client, topic, key=None):
                         
                     
                 except KeyError:
-                    private_shared_key = b'bc12b45'
+                    private_shared_key = b'bc12b46'
                     mensajeDict = eval(msg.payload)
                     hmacLocal = hmac_md5(private_shared_key, mensajeDict['msg_encriptado'])
                     hmacLocal = base64.b64encode(hmacLocal.digest()).decode()
@@ -56,7 +56,6 @@ def subscribe(client: mqtt_client, topic, key=None):
                         print("HMAC correcto, se ha verificado la autenticacion")
                     else:
                         print("Los HMAC no coinciden no se ha podido verificar la autenticacion.")
-                    
                     nonce = None
                     print(f"Recibido '{KeyUtils.decrypt_message(mensajeDict['msg_encriptado'], key, mensajeDict['hmac'], hmacLocal)}' del topic '{topic}'")
                     pass
