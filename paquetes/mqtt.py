@@ -12,9 +12,9 @@ class Mqtt:
     def connect_mqtt(client_id):
         def on_connect(client, userdata, flags, rc):
             if rc == 0:
-                print("Connected to MQTT Broker!")
+                print("Conectado al broker!")
             else:
-                print("Failed to connect, return code %d\n", rc)
+                print("Fallo al conectar, código %d\n", rc)
 
         client = mqtt_client.Client(client_id)
         client.username_pw_set(username, password)
@@ -31,8 +31,8 @@ class Mqtt:
         if status == 0:
             if "message" in topic:
                 if len(msg) >= 20:
-                    print(f"Send message '{msg[1:20]}'... to topic '{topic}'")
+                    print(f"Mensaje '{msg[1:20]}'... enviado al topic '{topic}'")
                 else:
-                    print(f"Send message '{msg}' to topic '{topic}'")
+                    print(f"Mensaje '{msg}' enviado al topic '{topic}'")
         else:
-            print(f"Failed to send message to topic {topic}")
+            print(f"Fallo al enviar el mensaje al topic {topic}")

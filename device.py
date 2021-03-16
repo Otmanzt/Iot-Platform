@@ -101,7 +101,7 @@ def run():
         client.loop_start()
         subscribe(client, topic_new_params)  # Topic para esperar la respuesta con los parametros de la plataforma
         subscribe(client, topic_new_pb_plat)  # Topic para esperar la respuesta con los parametros de la plataforma
-        print("Connecting with platform... Please wait")
+        print("Conectando a la plataforma... Espere por favor.")
 
         mensaje_recibido = False
         time_out = 20
@@ -135,7 +135,7 @@ def run():
         mensaje = {}
 
         message = "Test"
-        print("What kind of encryption method do you want to use? (0-> Fernet, 1->AHEAD)")
+        print("¿Qué tipo de encriptación quieres usar? (0-> Fernet, 1->AHEAD)")
         optionEncyption = int(input())
 
         if optionEncyption == 0:

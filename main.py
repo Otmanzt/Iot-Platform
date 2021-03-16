@@ -90,7 +90,6 @@ def peticion_nuevo_dispositivo():
         time_init += 1
     platform.client.loop_stop()
 
-    print(mensaje_recibido)
     if mensaje_recibido:
         response = {
             "client_id": str(platform.client.client_id),
@@ -134,7 +133,6 @@ def intercambio_claves():
     time_init = 0
 
     if autenticado == "True":
-        print("holasdasd")
         topic_new_params = "/topic/newConnect/" + platform.client.client_id + "/params"
         topic_new_pb_plat = "/topic/newConnect/" + platform.client.client_id + "/publicPlatform"
         topic_new_pb_device = "/topic/newConnect/" + platform.client.client_id + "/publicDevice"
@@ -157,7 +155,6 @@ def intercambio_claves():
             time.sleep(1)
             time_init += 1
         platform.client.loop_stop()
-        print(platform.client.b_public_key)
         peer_public_numbers = dh.DHPublicNumbers(platform.client.b_public_key, platform.parameters.parameter_numbers())
         b_public_key = peer_public_numbers.public_key(default_backend())
         a_shared_key = platform.a_private_key.exchange(b_public_key)
