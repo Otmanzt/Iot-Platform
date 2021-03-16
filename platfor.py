@@ -18,7 +18,6 @@ def subscribe(client: mqtt_client, topic, key=None):
     def on_message(client, userdata, msg):    
 
         topic = msg.topic
-        print(topic)
         
         if "message" in topic:
             if topic[0] != '/':
@@ -77,7 +76,6 @@ def subscribe(client: mqtt_client, topic, key=None):
                 key = None
                 pass
         else:
-            print(topic)
             if topic == "topic/" + topic[6:16] + "/nonce":
                 nonceMsg[topic[6:16]] = msg.payload
                 Mqtt.publish(client, "ACK", "topic/" + topic[6:16] + "/ack")
@@ -174,63 +172,101 @@ def run():
                 client.loop_stop()
                 time_out = 20
                 time_init = 0
-                mensaje_recibido = False
-   
-                print("Introduce el numero aleatorio: ")
-                clave_auth = input()
                 
-                if clave_auth != '':
-                    codigo_auth = KeyUtils().encrypt_message(clave_auth, master_key)
-                    topic_auth = "/topic/" + client.client_id + "/auth"
-                    topic_auth_ack = "/topic/" + client.client_id + "/auth/ack"
-                    client.loop_start()
-                    Mqtt.publish(client, codigo_auth, topic_auth)
-                    subscribe(client, topic_auth_ack)
-                    while not mensaje_recibido and time_init < time_out:
-                        if hasattr(client, 'auth_ack'):
-                            mensaje_recibido = True
-                            autenticado = client.auth_ack
-            
-                        time.sleep(1)
-                        time_init += 1
-                    client.loop_stop()
-                mensaje_recibido = False
-                time_out = 20
-                time_init = 0  
-                if autenticado == "True":
-                    topic_new_params = "/topic/newConnect/" + client.client_id + "/params"
-                    topic_new_pb_plat = "/topic/newConnect/" + client.client_id + "/publicPlatform"
-                    topic_new_pb_device = "/topic/newConnect/" + client.client_id + "/publicDevice"
-                    topic_message = "/topic/" + client.client_id + "/message"
-                    topic_nonce= "topic/" + client.client_id + "/nonce"
-                    
-                    # Parametros
-                    Mqtt.publish(client, params_pem, topic_new_params)
-                    # Clave publica de la plataforma
-                    Mqtt.publish(client, a_public_key.public_numbers().y, topic_new_pb_plat)
-                    # Se queda escuchando la clave publica del dispositivo
-                    mensaje_recibido = False
-                    time_init = 0
-                    client.loop_start()
-                    subscribe(client, topic_new_pb_device)
-                    print("Esperando clave pública del dispositivo...")
-                    while not mensaje_recibido and time_init < time_out:
-                        if hasattr(client, 'b_public_key'):
-                            mensaje_recibido = True
-                        time.sleep(1)
-                        time_init += 1
-                    client.loop_stop()
+                if tipoEscenario == 0: 
+                    if mensaje_recibido:
+                        topic_new_params = "/topic/newConnect/" + client.client_id + "/params"
+                        topic_new_pb_plat = "/topic/newConnect/" + client.client_id + "/publicPlatform"
+                        topic_new_pb_device = "/topic/newConnect/" + client.client_id + "/publicDevice"
+                        topic_message = "/topic/" + client.client_id + "/message"
+                        topic_nonce= "topic/" + client.client_id + "/nonce"
                         
-                    mensaje_recibido = False
-
-                    peer_public_numbers = dh.DHPublicNumbers(client.b_public_key, parameters.parameter_numbers())
-                    b_public_key = peer_public_numbers.public_key(default_backend())
-                    a_shared_key = a_private_key.exchange(b_public_key)
-
-                    key = KeyUtils.convert_key(a_shared_key)
-                    deviceList[client.client_id] = key
+                        # Parametros
+                        Mqtt.publish(client, params_pem, topic_new_params)
+                        # Clave publica de la plataforma
+                        Mqtt.publish(client, a_public_key.public_numbers().y, topic_new_pb_plat)
+                        # Se queda escuchando la clave publica del dispositivo
+                        mensaje_recibido = False
+                        time_init = 0
+                        client.loop_start()
+                        subscribe(client, topic_new_pb_device)
+                        print("Esperando clave pública del dispositivo...")
+                        while not mensaje_recibido and time_init < time_out:
+                            if hasattr(client, 'b_public_key'):
+                                mensaje_recibido = True
+                            time.sleep(1)
+                            time_init += 1
+                        client.loop_stop()
+                            
+                        mensaje_recibido = False
+    
+                        peer_public_numbers = dh.DHPublicNumbers(client.b_public_key, parameters.parameter_numbers())
+                        b_public_key = peer_public_numbers.public_key(default_backend())
+                        a_shared_key = a_private_key.exchange(b_public_key)
+    
+                        key = KeyUtils.convert_key(a_shared_key)
+                        deviceList[client.client_id] = key
                     
                     print("Connected to device. Select a topic to listen the messages.")
+ 
+                elif tipoEscenario == 2:
+                    mensaje_recibido = False
+                    print("Introduce el numero aleatorio: ")
+                    clave_auth = input()
+                    
+                    if clave_auth != '':
+                        codigo_auth = KeyUtils().encrypt_message(clave_auth, master_key)
+                        topic_auth = "/topic/" + client.client_id + "/auth"
+                        topic_auth_ack = "/topic/" + client.client_id + "/auth/ack"
+                        client.loop_start()
+                        Mqtt.publish(client, codigo_auth, topic_auth)
+                        subscribe(client, topic_auth_ack)
+                        while not mensaje_recibido and time_init < time_out:
+                            if hasattr(client, 'auth_ack'):
+                                mensaje_recibido = True
+                                autenticado = client.auth_ack
+                
+                            time.sleep(1)
+                            time_init += 1
+                        client.loop_stop()
+                    mensaje_recibido = False
+                    time_out = 20
+                    time_init = 0  
+                    if autenticado == "True":
+                        topic_new_params = "/topic/newConnect/" + client.client_id + "/params"
+                        topic_new_pb_plat = "/topic/newConnect/" + client.client_id + "/publicPlatform"
+                        topic_new_pb_device = "/topic/newConnect/" + client.client_id + "/publicDevice"
+                        topic_message = "/topic/" + client.client_id + "/message"
+                        topic_nonce= "topic/" + client.client_id + "/nonce"
+                        
+                        # Parametros
+                        Mqtt.publish(client, params_pem, topic_new_params)
+                        # Clave publica de la plataforma
+                        Mqtt.publish(client, a_public_key.public_numbers().y, topic_new_pb_plat)
+                        # Se queda escuchando la clave publica del dispositivo
+                        mensaje_recibido = False
+                        time_init = 0
+                        client.loop_start()
+                        subscribe(client, topic_new_pb_device)
+                        print("Esperando clave pública del dispositivo...")
+                        while not mensaje_recibido and time_init < time_out:
+                            if hasattr(client, 'b_public_key'):
+                                mensaje_recibido = True
+                            time.sleep(1)
+                            time_init += 1
+                        client.loop_stop()
+                            
+                        mensaje_recibido = False
+    
+                        peer_public_numbers = dh.DHPublicNumbers(client.b_public_key, parameters.parameter_numbers())
+                        b_public_key = peer_public_numbers.public_key(default_backend())
+                        a_shared_key = a_private_key.exchange(b_public_key)
+    
+                        key = KeyUtils.convert_key(a_shared_key)
+                        deviceList[client.client_id] = key
+                    
+                    print("Connected to device. Select a topic to listen the messages.")
+                    
                 else:
                     print("Device not found.")
 

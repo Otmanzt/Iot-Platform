@@ -131,7 +131,7 @@ def run():
         key = KeyUtils.convert_key(b_shared_key)
 
         # Variables para autenticacion HMAC
-        private_shared_key = b'bc12b46'
+        private_shared_key = b'bc12b45'
         mensaje = {}
 
         message = "Test"
