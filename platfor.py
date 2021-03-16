@@ -34,7 +34,7 @@ def subscribe(client: mqtt_client, topic, key=None):
                     
                     nonce = nonceMsg[msg_client_id]
                                            
-                    private_shared_key = b'bc12b46'
+                    private_shared_key = b'bc12b45'
                     mensajeDict = eval(msg.payload)
                     hmacLocal = hmac_md5(private_shared_key, mensajeDict['msg_encriptado'])
                     hmacLocal = base64.b64encode(hmacLocal.digest()).decode()
@@ -47,7 +47,7 @@ def subscribe(client: mqtt_client, topic, key=None):
                         
                     
                 except KeyError:
-                    private_shared_key = b'bc12b46'
+                    private_shared_key = b'bc12b45'
                     mensajeDict = eval(msg.payload)
                     hmacLocal = hmac_md5(private_shared_key, mensajeDict['msg_encriptado'])
                     hmacLocal = base64.b64encode(hmacLocal.digest()).decode()
