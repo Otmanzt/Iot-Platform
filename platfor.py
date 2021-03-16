@@ -18,7 +18,6 @@ def subscribe(client: mqtt_client, topic, key=None):
     def on_message(client, userdata, msg):    
 
         topic = msg.topic
-        print(topic)
         
         if "message" in topic:
             if topic[0] != '/':
@@ -59,7 +58,7 @@ def subscribe(client: mqtt_client, topic, key=None):
                         print("Los HMAC no coinciden no se ha podido verificar la autenticacion.")
                     
                     nonce = None
-                    print(f"Received '{KeyUtils.decrypt_message(mensajeDict['msg_encriptado'], key, mensajeDict['hmac'], hmacLocal)}' from '{topic}' topic")
+                    print(f"Recibido '{KeyUtils.decrypt_message(mensajeDict['msg_encriptado'], key, mensajeDict['hmac'], hmacLocal)}' del topic '{topic}'")
                     pass
 
             except KeyError:
@@ -77,7 +76,6 @@ def subscribe(client: mqtt_client, topic, key=None):
                 key = None
                 pass
         else:
-            print(topic)
             if topic == "topic/" + topic[6:16] + "/nonce":
                 nonceMsg[topic[6:16]] = msg.payload
                 Mqtt.publish(client, "ACK", "topic/" + topic[6:16] + "/ack")
@@ -122,10 +120,10 @@ def run():
         task = -1
 
         while task != "0" and task != "1":
-            print("\nWhat do you want to do?")
-            print("0 - Select topics to listen.")
-            print("1 - List/remove devices.")
-            print("2 - Register new device.")
+            print("\n¿Qué quieres hacer?")
+            print("0 - Seleccionar topic para leer.")
+            print("1 - Listar/eliminar dispositivos.")
+            print("2 - Registrar nuevo dispositivo.")
             task = input()
 
             client = Mqtt.connect_mqtt(name)
@@ -133,7 +131,7 @@ def run():
 
             if task == "0":
 
-                print("Please write the name of topic or 0 if you want to listen all existent topics.")
+                print("Por favor escribe el nombre del topic a escuchar o 0 si quieres escuchar todos.")
                 topicOption = input()
 
                 if topicOption == "0":
@@ -147,7 +145,7 @@ def run():
             
             if task == "1":
 
-                print("List of registred devices:")
+                print("Lista de dispositivos registrados:")
                 i = 1
 
                 for clave in deviceList.keys():
@@ -155,7 +153,7 @@ def run():
                     i=i+1
                 
                 if i!=1:
-                    print("\nDo you want to remove any device? Just write the number of the device to remove it or 0 if you don't want to remove a device.")
+                    print("\n¿Quieres eliminar algún dispositivo? Escribe el número del dispositivo a eliminar o 0 si no quieres eliminar ninguno.")
                     optionSelected = int(input())
 
                     if optionSelected != 0:
@@ -230,9 +228,9 @@ def run():
                     key = KeyUtils.convert_key(a_shared_key)
                     deviceList[client.client_id] = key
                     
-                    print("Connected to device. Select a topic to listen the messages.")
+                    print("Conectado.")
                 else:
-                    print("Device not found.")
+                    print("Dispositivo no encontrado.")
 
 
 if __name__ == '__main__':
