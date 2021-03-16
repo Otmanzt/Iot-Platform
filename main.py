@@ -107,10 +107,14 @@ def peticion_nuevo_dispositivo():
 @app.route('/intercambio', methods=["POST"])
 def intercambio_claves():
     mensaje_recibido = False
-    autenticado = True
+    autenticado = "True"
     time_out = 20
     time_init = 0
-    clave_auth = request.form['clave_auth']
+    clave_auth = ''
+
+    if 'clave_auth' in request.form:
+        clave_auth = request.form['clave_auth']
+
 
     if clave_auth != '':
         codigo_auth = KeyUtils().encrypt_message(clave_auth, platform.master_key)
