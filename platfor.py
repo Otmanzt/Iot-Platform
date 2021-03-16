@@ -10,7 +10,6 @@ from hashlib import md5
 deviceList = {}
 nonceMsg = {}
 optionEncyption = 0
-tipoEscenario = 0 
 # Master key
 master_key = KeyUtils().load_key()
 
@@ -82,7 +81,7 @@ def subscribe(client: mqtt_client, topic, key=None):
                 if topic in "/topic/request":
                     clienteDict = eval(msg.payload)
                     client.client_id = clienteDict['client_id']
-                    tipoEscenario = clienteDict['tipoEscenario']
+                    client.tipoEscenario = clienteDict['tipoEscenario']
                     print("Found new device: "+client.client_id+". Connecting...")
                 if topic == "/topic/newConnect/" + client.client_id + "/publicDevice":
                     client.b_public_key = int(msg.payload)
@@ -99,6 +98,7 @@ def run():
     mensaje_recibido = False
     time_out = 20
     time_init = 0
+    tipoEscenario = 0 
     parameters = dh.generate_parameters(generator=2, key_size=512, backend=default_backend())
     
     autenticado = True
@@ -169,11 +169,13 @@ def run():
                     time.sleep(1)
                     time_init += 1
                 client.loop_stop()
-                time_out = 20
-                time_init = 0
+
+                tipoEscenario = client.tipoEscenario
                 
                 if tipoEscenario == 0: 
                     if mensaje_recibido:
+                        time_out = 20
+                        time_init = 0
                         topic_new_params = "/topic/newConnect/" + client.client_id + "/params"
                         topic_new_pb_plat = "/topic/newConnect/" + client.client_id + "/publicPlatform"
                         topic_new_pb_device = "/topic/newConnect/" + client.client_id + "/publicDevice"
@@ -209,6 +211,8 @@ def run():
                     print("Connected to device. Select a topic to listen the messages.")
  
                 elif tipoEscenario == 2:
+                    time_out = 20
+                    time_init = 0
                     mensaje_recibido = False
                     print("Introduce el numero aleatorio: ")
                     clave_auth = input()
