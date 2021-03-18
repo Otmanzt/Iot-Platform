@@ -48,7 +48,12 @@ def escuchar():
     time_init = 0
 
     platform.client.loop_start()
-    subscribe(platform.client, topic, platform.device_list)
+    subscribe(platform.client, topic, platform.device_list,None,platform.nonceMsg)
+    if topic[0] != '/':
+        msg_client_id = topic[6:16]
+    else:
+        msg_client_id = topic[7:17]
+    subscribe(platform.client, "topic/" + msg_client_id + "/nonce",platform.device_list,None,platform.nonceMsg)
 
     while time_init < time_out:
         if hasattr(platform.client, 'message') and platform.client.message is not None:

@@ -62,7 +62,7 @@ def subscribe(client: mqtt_client, topic, key=None):
             except KeyError:
                 key = None
                 pass
-        elif "auth/ack" in msg.topic:
+        elif "auth/ack" in topic:
             if topic[0] != '/':
                 msg_client_id = topic[6:16]
             else:
