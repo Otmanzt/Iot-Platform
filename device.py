@@ -11,22 +11,30 @@ import hmac
 from hashlib import md5
 import json 
 
+# Numero que va a servir como id del dispositivo
 randomNumber = random.randint(100, 999)
-master_key = KeyUtils().load_key()
 client_id = f'client-{randomNumber}'
+# Master key estatica que tienen de forma compartida el dispositivo y la plataforma
+master_key = KeyUtils().load_key()
 
 
 def subscribe(client: mqtt_client, topic, key=None):
     def on_message(client, userdata, msg):
-
+        # Topic para recibir los parametros de la plataforma
         if msg.topic == "/topic/newConnect/" + client_id + "/params":
             client.params_b = msg.payload.decode()
+        # Topic para recibir la clave publica de la plataforma
         if msg.topic == "/topic/newConnect/" + client_id + "/publicPlatform":
             client.a_public_key = int(msg.payload)
+        # Topic recibir el ack de confirmacion del recibimiento del nonce por parte de la plataforma
+        # (AHEAD)
         if msg.topic == "topic/" + client_id + "/ack":
             client.ack = True
+        # Topic para recibir el mensaje encriptado con la master key para verificar la autenticacion
         if msg.topic == "/topic/" + client_id + "/auth":
             client.clave_auth = msg.payload
+        # Topic para recibir el ack de que la plataforma ha conseguido descifrar correctamente el mensaje
+        # y se ha verificado la autenticacion
         if msg.topic == "/topic/" + client_id + "/auth/ack":
             client.auth_ack = msg.payload
 
@@ -37,17 +45,18 @@ def hmac_md5(key, msg):
     return hmac.HMAC(key, msg, md5)
 
 def run():
-
+    # Variable que va a indicar si se ha recibido mensaje de la suscripcion de algun topic
     mensaje_recibido = False
+    # Tiempo maximo de espera para la escucha de un topic
     time_out = 20
     time_init = 0
+    # variable de autenticacion
     autenticado = "True"
     
+    # Tipo de cifrado
     optionEncyption = 0
-    option = -1
-    task = -1
-    topicOption = -1
-    changekey = -1
+    
+    # Tipo de escenario del dispositivo
     tipoEscenario = 0
     
     # Eleccion de escenario
@@ -58,14 +67,23 @@ def run():
     tipoEscenario = int(input())
 
     # TOPICS
+    # Topic: parametros para DH
     topic_new_params = "/topic/newConnect/"+client_id+"/params"
+     # Topic para recibir la clave publica de la plataforma
     topic_new_pb_plat = "/topic/newConnect/" + client_id + "/publicPlatform"
+     # Topic para enviar la clave publica del dispositivo
     topic_new_pb_device = "/topic/newConnect/" + client_id + "/publicDevice"
-    topic_request = "/topic/request"   
+    # Topic para solicitar nueva conexion
+    topic_request = "/topic/request"  
+    # Topic para enviar mensajes 
     topic_message = "/topic/" + client_id + "/message"
+    # Topic para enviar el nonce (AHEAD)
     topic_nonce = "topic/" + client_id + "/nonce"
+    # Topic para enviar o recibir ack de conexion
     topic_ack = "topic/" + client_id + "/ack"
+    # Topic para iniciar la autenticacion
     topic_auth = "/topic/" + client_id + "/auth"
+    # Topic para recibir o enviar ack de autenticacion
     topic_auth_ack = "/topic/" + client_id + "/auth/ack"
 
     
@@ -75,8 +93,11 @@ def run():
     
     # Creamos un nuevo dict para anadir el tipo de escenario para comunicarlo a la plataforma
     cliente = {'client_id': client_id, 'tipoEscenario': tipoEscenario}
-
-    Mqtt.publish(client, str(cliente), topic_request)  # Topic para enviar la peticion de conexion nueva con la plataform
+    
+    # Topic para enviar la peticion de conexion nueva con la plataform
+    Mqtt.publish(client, str(cliente), topic_request)   
+    
+    # Escenario 1 de entrada
     if tipoEscenario == 1:
         print("Introduce el codigo de autenticacion de la plataforma: ")
         numero_random = int(input())

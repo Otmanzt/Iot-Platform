@@ -47,11 +47,13 @@
                             controlSpinner()
 
                             if (obj.messages.length>0){
-                                var html = "<b>Mensajes recibidos de "+obj.topic+":</b><br>"
+                                //var html = "<b>Mensajes recibidos de "+obj.topic+":</b><br>"
+                                var html="<b>Mensajes ordenados por orden de llegada</b><br>";
                                 html +='<ul class="list-group">'
 
                                 for(var i = 0; i < obj.messages.length;i++){
                                     html += '<li class="list-group-item">'
+                                    html += "<b>Dispositivo: </b> " + obj.clientes[i] + " ";
                                     html += "<b>Texto: </b> " + obj.messages[i];
                                     html += '</li>';
                                 }

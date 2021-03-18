@@ -43,6 +43,7 @@ def selecTopic():
 def escuchar():
     topic = request.form['topic']
     mensaje_recibido = []
+    mensaje_client = []
     time_out = 20
     time_init = 0
 
@@ -52,6 +53,7 @@ def escuchar():
     while time_init < time_out:
         if hasattr(platform.client, 'message') and platform.client.message is not None:
             mensaje_recibido.append(platform.client.message)
+            mensaje_client.append(platform.client.id_msg_cliente)
         time.sleep(1)
         time_init += 1
     platform.client.loop_stop()
@@ -59,6 +61,7 @@ def escuchar():
     if mensaje_recibido:
         response = {
             "topic": platform.client.topic_client,
+            "clientes": mensaje_client,
             "messages": mensaje_recibido,
             "estado": True
         }

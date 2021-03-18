@@ -15,14 +15,14 @@ def subscribe(client: mqtt_client, topic, device_list=None, key=None):
                 msg_client_id = topic[6:16]
             else:
                 msg_client_id = topic[7:17]
-            print(topic)
-            print(msg_client_id)
             try:
                 key = device_list[msg_client_id]
                 clienteArray = eval(msg.payload)
                 print(f"Received '{KeyUtils.decrypt_message(clienteArray['msg_encriptado'], key)}' from '{topic}' topic")
                 client.message = KeyUtils.decrypt_message(clienteArray['msg_encriptado'], key)
                 client.topic_client = topic
+                client.id_msg_cliente = msg_client_id
+                
             except KeyError:
                 key = None
                 pass
