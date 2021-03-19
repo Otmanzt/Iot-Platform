@@ -82,7 +82,7 @@ def escuchar():
 
 
 @app.route('/registrarDispositivo', methods=["POST"])
-def peticion_nuevo_dispositivo():
+def peticion_nuevo_dispositivo(): #Funciona asincrona que hace la suscripcion al topic de request y se queda esperando como maximo 20seg para ver si se intenta conectar un nuevo dispositivo
     topic_request = "/topic/request"
     mensaje_recibido = False
     time_out = 20
@@ -98,6 +98,7 @@ def peticion_nuevo_dispositivo():
         time_init += 1
     platform.client.loop_stop()
 
+    #Si se ha recibido un mensaje con los parametros del cliente, se construye un objeto que despues se pasa a JSON para devolverlo a la llamada AJAX de la vista registrar.html
     if mensaje_recibido:
         response = {
             "client_id": str(platform.client.client_id),
@@ -113,7 +114,7 @@ def peticion_nuevo_dispositivo():
     return response
 
 @app.route('/intercambio', methods=["POST"])
-def intercambio_claves():
+def intercambio_claves(): #Esta funcion seria el siguiente paso a la peticion de un nuevo dispositivo, y se encarga de realizar la autenticacion segun el escenario y el intercambio de claves pertinente
     mensaje_recibido = False
     autenticado = "True"
     time_out = 20
@@ -123,12 +124,12 @@ def intercambio_claves():
     topic_auth = "/topic/" + platform.client.client_id + "/auth"
     topic_auth_ack = "/topic/" + platform.client.client_id + "/auth/ack"
 
-    if 'clave_auth' in request.form:
+    if 'clave_auth' in request.form: # Si el escenario es tipo 2, salida, debe leerse el input con el codigo introducico
         clave_auth = request.form['clave_auth']
-    if 'numero_random' in request.form:
+    if 'numero_random' in request.form:# Si el escenario es tipo 1, entrada, se debe extraer el numero aleatorio generado en el JS
         numero_random = request.form['numero_random']
 
-    if clave_auth != '':
+    if clave_auth != '': #Esc 2
         codigo_auth = KeyUtils().encrypt_message(clave_auth, platform.master_key)
         platform.client.loop_start()
         Mqtt.publish(platform.client, codigo_auth, topic_auth)
@@ -142,7 +143,7 @@ def intercambio_claves():
             time_init += 1
         platform.client.loop_stop()
 
-    if numero_random != '0':
+    if numero_random != '0': #Esc 1
         platform.client.loop_start()
         subscribe(platform.client, topic_auth)
         while not mensaje_recibido:
@@ -161,7 +162,7 @@ def intercambio_claves():
     time_out = 20
     time_init = 0
 
-    if autenticado == "True":
+    if autenticado == "True": #Si la autenticacion es correcta se procede al intercambio de las claves
         topic_new_params = "/topic/newConnect/" + platform.client.client_id + "/params"
         topic_new_pb_plat = "/topic/newConnect/" + platform.client.client_id + "/publicPlatform"
         topic_new_pb_device = "/topic/newConnect/" + platform.client.client_id + "/publicDevice"

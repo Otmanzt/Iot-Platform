@@ -7,7 +7,7 @@ from cryptography.hazmat.primitives.serialization import Encoding
 import hmac
 from hashlib import md5
 
-
+#Este controlador tiene las mismas funcionalidades que platfor.py, pero esta adaptado a la version web con algunas pequeñas modificaciones, y ademas esta orientado a objetos.
 def subscribe(client: mqtt_client, topic, device_list=None, key=None, nonceMsg = None):
     def on_message(client, userdata, msg):
 
