@@ -17,8 +17,7 @@ def index():
 def registrar():
     datos = {'pk_pub': platform.a_public_key.public_numbers().y}
 
-    return render_template('registrar.html', datos=datos)
-
+    return render_template('registrar.html', datos=datos) 
 
 @app.route('/listar')
 def listar():
@@ -167,8 +166,6 @@ def intercambio_claves(): #Esta funcion seria el siguiente paso a la peticion de
         topic_new_pb_plat = "/topic/newConnect/" + platform.client.client_id + "/publicPlatform"
         topic_new_pb_device = "/topic/newConnect/" + platform.client.client_id + "/publicDevice"
         topic_message = "/topic/" + platform.client.client_id + "/message"
-
-
 
         # Se queda escuchando la clave publica del dispositivo
         mensaje_recibido = False
