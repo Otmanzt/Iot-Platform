@@ -34,9 +34,10 @@ def subscribe(client: mqtt_client, topic, device_list=None, key=None, nonceMsg =
                     #Busca el nonce del mensaje
                     nonce = nonceMsg[msg_client_id]
 
-                    #OTMAN
+                    # Variables para autenticacion HMAC
                     private_shared_key = b'bc12b46'
                     mensajeDict = eval(msg.payload)
+                    # Calculo del hmac local para compararlo con el que llega
                     hmacLocal = hmac_md5(private_shared_key, mensajeDict['msg_encriptado'])
                     hmacLocal = base64.b64encode(hmacLocal.digest()).decode()
 
@@ -45,7 +46,7 @@ def subscribe(client: mqtt_client, topic, device_list=None, key=None, nonceMsg =
                                                     hmacLocal) is not None:
                         print("HMAC correcto, se ha verificado la autenticacion")
                         print(f"Recibido '{KeyUtils.decrypt_message_aes(mensajeDict['msg_encriptado'], key, nonce, mensajeDict['hmac'], hmacLocal)}' del topic '{topic}'")
-                        #OTMAN
+                        # Variables que se van a mostrar en el topic
                         clienteArray = eval(msg.payload)
                         client.message = KeyUtils.decrypt_message_aes(clienteArray['msg_encriptado'], key, nonce, mensajeDict['hmac'], hmacLocal)
                         client.topic_client = topic
@@ -56,9 +57,10 @@ def subscribe(client: mqtt_client, topic, device_list=None, key=None, nonceMsg =
 
                 #Si no se puede por AHEAD, se hace por Fernet.
                 except KeyError:
-                    #OTMAN
+                     # Variables para autenticacion HMAC
                     private_shared_key = b'bc12b46'
                     mensajeDict = eval(msg.payload)
+                    # Calculo del hmac local para compararlo con el que llega
                     hmacLocal = hmac_md5(private_shared_key, mensajeDict['msg_encriptado'])
                     hmacLocal = base64.b64encode(hmacLocal.digest()).decode()
                     #Obtenemos la clave para desencriptar
@@ -72,7 +74,7 @@ def subscribe(client: mqtt_client, topic, device_list=None, key=None, nonceMsg =
                         print("Los HMAC no coinciden no se ha podido verificar la autenticacion.")
                     nonce = None
                     print(f"Recibido '{KeyUtils.decrypt_message(mensajeDict['msg_encriptado'], key, mensajeDict['hmac'], hmacLocal)}' del topic '{topic}'")
-                    #OTMAN
+                    # variables que se van a usar para mostrar en el topic
                     clienteArray = eval(msg.payload)
                     client.message = KeyUtils.decrypt_message(clienteArray['msg_encriptado'], key, mensajeDict['hmac'], hmacLocal)
                     client.topic_client = topic
@@ -82,7 +84,7 @@ def subscribe(client: mqtt_client, topic, device_list=None, key=None, nonceMsg =
             except KeyError:
                 key = None
                 pass
-        #OTMAN
+        # Para la confirmacion de la autenticacion
         elif "auth/ack" in topic:
             if topic[0] != '/':
                 msg_client_id = topic[6:16]
@@ -94,7 +96,7 @@ def subscribe(client: mqtt_client, topic, device_list=None, key=None, nonceMsg =
             except KeyError:
                 key = None
                 pass
-        #OTMAN
+        # Para la confirmacion de la autenticacion
         elif "auth" in topic:
             if topic[0] != '/':
                 msg_client_id = topic[6:16]
@@ -126,7 +128,7 @@ def subscribe(client: mqtt_client, topic, device_list=None, key=None, nonceMsg =
     client.subscribe(topic)
     client.on_message = on_message
 
-#OTMAN
+# funcion para calcular el hmac
 def hmac_md5(key, msg):
     return hmac.HMAC(key, msg, md5)
 
